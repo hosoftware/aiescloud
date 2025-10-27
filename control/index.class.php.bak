@@ -1,0 +1,222 @@
+<?php
+include_once"control/common.php";
+class INDEX {
+	function __construct() {
+
+		$this->page = 0;
+		$this->user_id=0;
+		/*do action changes*/
+		$this->objCommonFunc = new COMMONFUNC();
+		$this->objPagination = new PAGINATION();
+		if(!empty($_REQUEST['page'])) {
+			$this->page = $_REQUEST['page'];
+		}
+
+		if(empty($_REQUEST['doAction'])) {
+			$this->doAction = "";
+		}
+		else {
+			$this->doAction = $_REQUEST['doAction'];
+		}
+
+		if(isset($_REQUEST['user_id'])) {
+			$this->user_id = $_REQUEST['user_id'];
+		}
+
+		if(!empty($_REQUEST['txtFilterName'])) {
+			$this->txtFilterName = $_REQUEST['txtFilterName'];
+		}
+		else {
+			$this->txtFilterName = "";
+		}
+
+		if(!empty($_REQUEST['submit']) && $_REQUEST['submit']=='CANCEL') {
+			header('location:'.FILENAME);
+		}
+		if(!empty($_REQUEST['doAction'])) {
+			switch($_REQUEST['doAction']) {
+				case"LOGIN":
+					print $key = md5(CLIENTNAME); exit;
+				  $select = " SELECT rl_rig_id,rl_type,rl_username, DATEDIFF(CURDATE(),rl_create_date) days,DATE(rl_create_date) rl_create_date FROM rig_login WHERE rl_username='".addslashes($_REQUEST['txtUsername'])."'
+					AND tmp_pass = '".addslashes(md5($_REQUEST['txtPassword']))."'"; 
+				//	exit;
+					$result = $this->objCommonFunc->executeQuery($select);
+					$row = $this->objCommonFunc->fetchAssoc($result);
+					if(!empty($row['rl_rig_id'])) {
+						$_SESSION['user_id'] = $row['rl_rig_id'];
+						$_SESSION['type'] = $row['rl_type'];
+						$_SESSION['username'] = $row['rl_username'];
+						$_SESSION['create_date'] = $row['rl_create_date'];
+						$_SESSION['days'] = $row['days'];
+						
+				//	print_r($_SESSION); exit;
+						$sql_upd = "UPDATE rig_login SET rl_log_date='".gmdate('Y-m-d H:i:s')."' WHERE rl_rig_id='".$row['rl_rig_id']."'";
+						$this->objCommonFunc->executeQuery($sql_upd);
+
+						$sql_ins="INSERT INTO activity_log(username,user_id,log_type,ip_address,user_agent)VALUES('".$_SESSION['username']."',
+						'".$_SESSION['user_id']."',
+						'Login to system',
+						'".$_SERVER['REMOTE_ADDR']."',
+						'".addslashes($_SERVER['HTTP_USER_AGENT'])."')";
+
+						$this->objCommonFunc->executeQuery($sql_ins);
+						$file = basename(str_replace(substr(strchr($_SERVER['REQUEST_URI'], "?"),0),'',$_SERVER['REQUEST_URI']));
+						$filename = strchr($file, ".");
+						$extn = substr($filename,1);
+						if($_SESSION['type'] == 'D'||$_SESSION['type'] == 'U') {
+							header('location:directory.php');
+						}
+						else {
+							if(empty($extn) && ($file!='index.php')) {
+								header('location:clienthome.php');
+							}
+							else {
+								if(!empty($_REQUEST['HTTP_REFERER1'])) {
+									$_SERVER['HTTP_REFERER'] = $_REQUEST['HTTP_REFERER1'];
+								}
+								header('location:'.$_SERVER['HTTP_REFERER']);
+							}
+						}
+					}
+					else {
+						$_REQUEST['errMsg'] = 'Y';
+						if(isset($_REQUEST['count1']) && $_REQUEST['count1']=='1') {
+						$_REQUEST['HTTP_REFERER1'] = $_SERVER['HTTP_REFERER'];
+
+						}
+						//header('location:'.FILENAME.'?errMsg=Y');
+					}
+					break;
+				case"FORGOTPASSWORD":
+					$sql_ins = "INSERT INTO forgotpassword(name,email,phone,company_name,rigname,send_date)
+						VALUES('".addslashes($_REQUEST['txtName'])."',
+						'".addslashes($_REQUEST['txtEmail'])."',
+						'".addslashes($_REQUEST['txtPhone'])."',
+						'".addslashes($_REQUEST['txtCompany'])."',
+						'".addslashes($_REQUEST['txtRigname'])."',
+						'".addslashes(gmdate('Y-m-d H:i:s'))."'
+						)";
+					$this->objCommonFunc->executeQuery($sql_ins);
+					include_once "mailsend.php";
+					$body = "<table border='0' align='center' style='border:5px solid #49ADD4;' width='50%' cellspacing='0' cellpadding='4'>
+						  <tr>
+						  <td><img src='http://aries-cloud.com/images/logo.png'></td>
+						  </tr>
+						  <tr bgcolor='#49ADD4'>
+						   <td bgcolor='#49ADD4' style='color:white;font-size:20px;'>
+								<br/><br/>Hi,<br/>
+							   ".$_REQUEST['txtName']." has been sent a password request.
+							 </td>
+						  </tr>
+						  <tr bgcolor='#49ADD4'>
+							<td>
+								<table border='0' style='color:white;font-size:20px;' cellpadding='4'>
+									<tr>
+									<td>Name
+									</td>
+									<td>:".$_REQUEST['txtName']."
+									</td>
+									</tr>
+									<tr>
+									<td>Email
+									</td>
+									<td>:".$_REQUEST['txtEmail']."
+									</td>
+									</tr>
+									<tr>
+									<td>Phone
+									</td>
+									<td>:".$_REQUEST['txtPhone']."
+									</td>
+									</tr>
+									<tr>
+									<td>Company
+									</td>
+									<td>:".$_REQUEST['txtCompany']."
+									</td>
+									</tr>
+									<tr>
+									<td>Rigname
+									</td>
+									<td>:".$_REQUEST['txtRigname']."
+									</td>
+									</tr>
+								</table>
+							</td>
+						  </tr>
+						   <tr bgcolor='#49ADD4'>
+							<td><br/>
+							<br/><br/>
+							</td>
+						  </tr>
+						</table>";
+						$subject="PASSWORD REQUEST";
+						$to="software@ariesgroup.ae";
+						$mail->setFrom('feedback@aries-cloud.com', '');
+						$mail->addAddress('software@ariesgroup.ae');
+						$mail->Subject = $subject;
+						$mail->Body = $body;
+						$mail->IsHTML(true);
+						if (!$mail->send()) {
+							header('location:index.php?errMsg=SN');
+							//display_error("Mailer Error: " . $mail->ErrorInfo);
+							//echo "Mailer Error: " . $mail->ErrorInfo;
+						} else {
+							//display_error("Message sent!");
+							header('location:index.php?errMsg=SY');
+						}
+
+					break;
+			}
+		}
+	}
+
+	/*function for fetching client*/
+	function  getRigInfo() {
+		$sqlSel = "SELECT SQL_CALC_FOUND_ROWS user_id, rig_name, rig_client_id,rig_imo_no,rig_manager,rig_type,rig_classification,rig_remarks,c.client_name,
+		rl.rl_username
+		FROM rigs r
+		LEFT JOIN clients c
+		ON r.rig_client_id = c.client_id
+		LEFT JOIN rig_login rl
+		ON rl.rl_user_id=r.user_id
+		WHERE 1";
+
+		if(!empty($this->txtFilterName)) {
+			$sqlSel .= " AND rig_name LIKE '%".$this->txtFilterName."%'";
+		}
+
+		$sqlSel .= " ORDER BY rig_name";
+
+		if($this->page==0) {
+			$sqlSel .= " LIMIT 0,".LIMIT;
+		}
+		else {
+			$sqlSel .= " LIMIT ".((LIMIT*($this->page-1))).",".(LIMIT);
+		}
+		$result = $this->objCommonFunc->executeQuery($sqlSel);
+		return $result;
+	}
+
+	function  roGgetRigInfo() {
+		$sqlSel = "SELECT SQL_CALC_FOUND_ROWS user_id, rig_name, rig_client_id,rig_imo_no,rig_manager,rig_type,rig_classification,rig_remarks,c.client_name,
+		rl.rl_username
+		FROM rigs r
+		LEFT JOIN clients c
+		ON r.rig_client_id = c.client_id
+		LEFT JOIN rig_login rl
+		ON rl.rl_user_id=r.user_id
+		WHERE r.user_id = '".$this->user_id."'";
+		$result = $this->objCommonFunc->executeQuery($sqlSel);
+		return $this->objCommonFunc->fetchAssoc($result);
+	}
+
+	/*Function for fetching client name*/
+	function getClientNameList() {
+		$sqlsel = "SELECT SQL_CALC_FOUND_ROWS client_id,client_name FROM clients";
+		$result = $this->objCommonFunc->executeQuery($sqlsel);
+		return $result;
+	}
+}
+$index = new INDEX();
+?>

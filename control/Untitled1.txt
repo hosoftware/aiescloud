@@ -1,0 +1,111 @@
+
+
+
+
+0_client_activity_status 
+
+
+
+Find the yearly comparison report preparation using mysql query , The tables required for
+
+0_dedtors_master files are debtor_no (primary key) , name , country(prinmary key of table 0_country its files are id, name )
+
+Enquiry can be fetch from 0_client_enquiry table primary key is client_enquiry_id , enquiry_date, company, division, subdivision , enq_status, aprox_amount, rate
+
+Job amount can be fetch from 0_debtor_trans table (trans_no, trans_type, ov_amount, rate, dimension_id, dimension2_id, dimension3_id and total_expense_aed)
+
+I need the 2024 and 2025 comparison of enqury and job 
+
+
+
+SELECT 
+    c.name AS Country,
+    -- Enquiry Total
+    SUM(CASE WHEN YEAR(e.enquiry_date) = 2024 THEN e.aprox_amount * e.rate ELSE 0 END) AS Enquiry_2024,
+    SUM(CASE WHEN YEAR(e.enquiry_date) = 2025 THEN e.aprox_amount * e.rate ELSE 0 END) AS Enquiry_2025,
+    
+    -- Job Award (from debtor_trans)
+    SUM(CASE WHEN YEAR(t.tran_date) = 2024 THEN (t.ov_amount * t.rate) + t.total_expense_aed ELSE 0 END) AS Job_2024,
+    SUM(CASE WHEN YEAR(t.tran_date) = 2025 THEN (t.ov_amount * t.rate) + t.total_expense_aed ELSE 0 END) AS Job_2025,
+
+    -- Enquiry Lost
+    SUM(CASE WHEN YEAR(e.enquiry_date) = 2024 AND e.enq_status = 2 THEN e.aprox_amount * e.rate ELSE 0 END) AS EnquiryLost_2024,
+    SUM(CASE WHEN YEAR(e.enquiry_date) = 2025 AND e.enq_status = 2 THEN e.aprox_amount * e.rate ELSE 0 END) AS EnquiryLost_2025,
+
+    -- Enquiry Cancel
+    SUM(CASE WHEN YEAR(e.enquiry_date) = 2024 AND e.enq_status = 1 THEN e.aprox_amount * e.rate ELSE 0 END) AS EnquiryCancel_2024,
+    SUM(CASE WHEN YEAR(e.enquiry_date) = 2025 AND e.enq_status = 1 THEN e.aprox_amount * e.rate ELSE 0 END) AS EnquiryCancel_2025
+
+FROM 0_debtors_master d
+LEFT JOIN 0_country c ON c.id = d.country
+LEFT JOIN ( SELECT client_enquiry_id, enquiry_date, aprox_amount,rate, company, division, subdivision, debtor_no,enq_status
+
+	FROM 0_client_enquiry 
+	
+	WHERE enquiry_date >= '2024-01-01' AND enquiry_date <= '2025-12-31' 
+) e
+ON d.debtor_no = d.debtor_no
+LEFT JOIN (
+SELECT trans_no, debtor_no, dimension_id, dimension2_id, dimension3_id, ov_amount, rate,tran_date,total_expense_aed
+FROM 0_debtor_trans 
+WHERE tran_date >= '2024-01-01' AND tran_date <= '2025-12-31' ) t
+ON t.debtor_no = d.debtor_no
+
+WHERE d.client_type !=5
+GROUP BY c.name
+ORDER BY c.name;
+
+
+WITH enquiry_summary AS (
+SELECT COUNT(client_enquiry_id) client_enquiry_id, enquiry_date, aprox_amount,rate, company, division, subdivision, debtor_no,enq_status, YEAR(enquiry_date) enquiry_year,
+SUM( aprox_amount * rate ) approx_amount
+
+	FROM 0_client_enquiry 
+	
+	WHERE enquiry_date >= '2024-01-01' AND enquiry_date <= '2025-12-31' 
+    GROUP BY YEAR(enquiry_date), debtor_no
+	),
+	Job_summary AS (
+		SELECT COUNT(trans_no) trans_no, debtor_no, dimension_id, dimension2_id, dimension3_id, ov_amount, rate,tran_date,total_expense_aed, YEAR(tran_date) inv_year,
+		SUM((ov_amount * rate) + total_expense_aed) inv_amount
+		FROM 0_debtor_trans 
+		WHERE tran_date >= '2024-01-01' AND tran_date <= '2025-12-31' 
+        GROUP BY YEAR(tran_date), debtor_no
+
+	)
+	
+	SELECT 
+    c.name AS Country,
+    -- Enquiry Total
+    SUM(CASE WHEN enquiry_year = 2024 THEN e.approx_amount  ELSE 0 END) AS Enquiry_2024,
+    SUM(CASE WHEN enquiry_year = 2024 THEN e.client_enquiry_id  ELSE 0 END) AS Enquiryno_2024,
+    SUM(CASE WHEN enquiry_year = 2025 THEN e.approx_amount  ELSE 0 END) AS Enquiry_2025,
+    SUM(CASE WHEN enquiry_year = 2025 THEN e.client_enquiry_id  ELSE 0 END) AS Enquiryno_2025,
+    
+    -- Job Award (from debtor_trans)
+    SUM(CASE WHEN inv_year = 2024 THEN t.inv_amount ELSE 0 END) AS Job_2024,
+    SUM(CASE WHEN inv_year = 2024 THEN t.trans_no ELSE 0 END) AS Jobno_2024,
+    SUM(CASE WHEN inv_year = 2025 THEN t.inv_amount ELSE 0 END) AS Job_2025,
+    SUM(CASE WHEN inv_year = 2025 THEN t.trans_no ELSE 0 END) AS Jobno_2025,
+
+    -- Enquiry Lost
+    SUM(CASE WHEN enquiry_year = 2024 AND e.enq_status = 2 THEN e.approx_amount ELSE 0 END) AS EnquiryLost_2024,
+    SUM(CASE WHEN enquiry_year = 2024 AND e.enq_status = 2 THEN e.client_enquiry_id ELSE 0 END) AS EnquiryLostno_2024,
+    SUM(CASE WHEN enquiry_year = 2025 AND e.enq_status = 2 THEN e.approx_amount  ELSE 0 END) AS EnquiryLost_2025,
+    SUM(CASE WHEN enquiry_year = 2025 AND e.enq_status = 2 THEN e.client_enquiry_id  ELSE 0 END) AS EnquiryLostno_2025,
+
+    -- Enquiry Cancel
+    SUM(CASE WHEN enquiry_year = 2024 AND e.enq_status = 1 THEN e.approx_amount ELSE 0 END) AS EnquiryCancel_2024,
+    SUM(CASE WHEN enquiry_year = 2024 AND e.enq_status = 1 THEN e.client_enquiry_id ELSE 0 END) AS EnquiryCancelno_2024,
+    SUM(CASE WHEN enquiry_year = 2025 AND e.enq_status = 1 THEN e.approx_amount  ELSE 0 END) AS EnquiryCancel_2025,
+    SUM(CASE WHEN enquiry_year = 2025 AND e.enq_status = 1 THEN e.client_enquiry_id  ELSE 0 END) AS EnquiryCancelno_2025
+	
+	FROM 0_debtors_master d
+LEFT JOIN 0_country c ON c.id = d.country
+LEFT JOIN enquiry_summary e
+ON e.debtor_no = d.debtor_no
+LEFT JOIN Job_summary t
+ON t.debtor_no = e.debtor_no
+WHERE d.client_type !=5
+GROUP BY c.name
+ORDER BY c.name;

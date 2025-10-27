@@ -1,0 +1,110 @@
+<?php
+include_once "control/changepassword.class.php";
+?><!doctype html>
+<html lang="en">
+  <head>
+     <title>Aries Cloud</title><?php
+	include_once "model/headerlinks.php";
+  ?><script language="javascript">
+		
+		/*Function for submitting Password*/
+		function frmPassSubmit(objFrm) {
+			if(objFrm.txtPassword.value=="") {
+				document.getElementById('password').style.display="block";
+				objFrm.txtPassword.focus();
+				return false;
+			}
+			else {
+				document.getElementById('password').style.display="none";
+			}
+
+			if(objFrm.txtRPassword.value=="") {
+				document.getElementById('rpassword').style.display="block";
+				objFrm.txtRPassword.focus();
+				return false;
+			}
+			else {
+				if(objFrm.txtPassword.value != objFrm.txtRPassword.value) {
+					document.getElementById('rpassword').style.display="none";
+					document.getElementById('nomatch').style.display="";
+					return false;
+				}
+				else {
+					document.getElementById('rpassword').style.display="none";
+					document.getElementById('nomatch').style.display="none";
+				}
+				
+			}
+		}
+  </script>
+  </head>
+   <body>
+		<div class="main"><!-- topbar start --><?php
+			include_once "model/topbar.php";
+			?><!-- topbar end -->
+			<!-- navigation bar start--><?php
+			include_once "model/navigation.php";
+			?><!-- navigation bar end-->
+				<!-- left bar start --><?php
+			include_once "model/leftbar.php";
+			?><div class="clear">
+				</div>
+				<!-- left bar end -->
+				<!-- Content start -->
+				<div class="content"><?php
+					switch($changepassword->doAction) {
+						case"":
+							$heading = "Change Password";
+							
+							if(empty($_REQUEST['txtPassword'])) {
+								$_REQUEST['txtPassword'] = "";
+							}
+							if(empty($_REQUEST['txtRPassword'])) {
+								$_REQUEST['txtRPassword'] = "";
+							}
+							
+							$rsl1 = $changepassword->getClientNameList();
+							?><div class="subcontent">
+								<div class="search">
+								<span class="heading1"><strong><?php print($heading)?></strong></span>
+								</div><?php
+								if(!empty($_REQUEST['errMsg'])) {
+								?><div id="errMsg">
+										Your password has been changed succesfully.
+								  </div><?php
+								}
+								?><div class="frm-content">
+									<form method="post" action="<?php print(FILENAME)?>" onsubmit="return frmPassSubmit(this)">
+										<table border="0" align="center" ><?php
+											?>
+											<tr>
+												<td>New Password<strong class="astric">*</strong></td><td><input type="password" name="txtPassword" value="<?php print(htmlentities($_REQUEST['txtPassword'],ENT_QUOTES))?>" class="txtfield" size="30" id="txtPassword"/>
+												<div class="arrow_box" id='password' style="display:none;">Please enter Password<div>
+												</td>
+											</tr>
+											<tr>
+												<td>Re-type your password<strong class="astric">*</strong></td><td><input type="password" name="txtRPassword" value="<?php print(htmlentities($_REQUEST['txtRPassword'],ENT_QUOTES))?>" class="txtfield" size="30" id="txtRPassword"/>
+												<div class="arrow_box" id='rpassword' style="display:none;">Please Re-type your password</div>
+												<div class="arrow_box" id='nomatch' style="display:none;">Password and Re-type password not matched</div>
+												</td>
+											</tr><?php
+											?><tr>
+												<td align="center" colspan="2"><input type="submit" value="SUBMIT" class="button1"/>&nbsp;&nbsp;<a href="<?php print(FILENAME)?>" class="button1">CANCEL</a></td>
+											</tr>
+										</table>
+										<input type='hidden' name='doAction' value="CHANGE_PASSWORD"/>
+									</form>
+								</div>
+							</div><?php
+							break;
+					}
+				?></div>
+				<!-- Content end -->
+				<div class="clear">
+				</div>
+				<!-- footer start --><?php
+			include_once "model/footer.php";
+			?><!-- footer end -->
+		</div>
+   </body>
+</html>

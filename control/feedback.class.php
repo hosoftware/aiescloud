@@ -1,0 +1,145 @@
+<?php
+include_once"control/common.php";
+class FEEDBACK {
+	function __construct() {
+		$this->page = 0;
+		$this->rep_id=0;
+		if(empty($_SESSION['user_id'])) {
+			header('./');
+		}
+		/*do action changes*/
+		$this->objCommonFunc = new COMMONFUNC();
+		$this->objPagination = new PAGINATION();
+		if(!empty($_REQUEST['page'])) {
+			$this->page = $_REQUEST['page'];
+		}
+
+		if(empty($_REQUEST['doAction'])) {
+			$this->doAction = "";
+		}
+		else {
+			$this->doAction = $_REQUEST['doAction'];
+		}
+
+		if(isset($_REQUEST['rep_id'])) {
+			$this->rep_id = $_REQUEST['rep_id'];
+		}
+
+		if(!empty($_REQUEST['txtFilterName'])) {
+			$this->txtFilterName = $_REQUEST['txtFilterName'];
+		}
+		else {
+			$this->txtFilterName = "";
+		}
+
+		if($this->doAction =='ADD_REPORT' || $this->doAction =='UPDATE_REPORT') {
+			if(!empty($_FILES['txtFile']['name'])) {
+				$extn = substr($_FILES['txtFile']['name'],-3);
+				if($extn !='pdf') {
+					echo "Please upload PDF File";exit;
+				}
+				
+			}
+			if(!empty($_FILES['txtFile2']['name'])) {
+				$extn = substr($_FILES['txtFile2']['name'],-3);
+				if($extn !='swf') {
+					echo "Please upload Flash(.swf) File";exit;
+				}
+				
+			}
+			
+		}
+		
+		if(!empty($_REQUEST['submit']) && $_REQUEST['submit']=='CANCEL') {
+			header('location:'.FILENAME);
+		}
+		
+		if(!empty($_REQUEST['doAction'])) {
+			switch($_REQUEST['doAction']) {
+				case"ADDFEEDBACK":
+					$sql_ins = "INSERT INTO feedbacks(fb_rig_id,fb_name,fb_sur_name,fb_position,fb_cat_id,fb_email,fb_mob_no,fb_ph_no,fb_comments)
+					VALUES('".addslashes($_SESSION['user_id'])."',
+					'".addslashes($_REQUEST['txtName'])."',
+					'".addslashes($_REQUEST['txtSurName'])."',
+					'".addslashes($_REQUEST['txtPosition'])."',
+					'".addslashes($_REQUEST['txtService'])."',
+					'".addslashes($_REQUEST['txtEmail'])."',
+					'".addslashes($_REQUEST['txtMobile'])."',
+					'".addslashes($_REQUEST['txtPhone'])."',
+					'".addslashes($_REQUEST['txtComments'])."'
+					)";
+					$this->objCommonFunc->executeQuery($sql_ins);
+					header('location:'.FILENAME."?errMsg=Y");
+					break;
+			}
+		}
+	}
+
+	/*function for fetching client*/
+	function  getFeedBack() {
+		$sqlSel = "SELECT SQL_CALC_FOUND_ROWS *, date(fb_created_date) fb_created_date
+		FROM feedbacks fb
+		LEFT JOIN rigs r
+		ON fb_rig_id = r.rig_id
+		LEFT JOIN rig_login
+		ON rl_rig_id = r.rig_id
+		LEFT JOIN clients 
+		ON client_id = rig_client_id
+		WHERE 1";
+		
+		$sqlSel .= " ORDER BY fb_created_date DESC";
+
+		if($this->page==0) {
+			$sqlSel .= " LIMIT 0,".LIMIT;
+		}
+		else {
+			$sqlSel .= " LIMIT ".((LIMIT*($this->page-1))).",".(LIMIT);
+		}
+		$result = $this->objCommonFunc->executeQuery($sqlSel);
+		return $result;
+	}
+
+	function  roGgetRigInfo() {
+		$sqlSel = "SELECT SQL_CALC_FOUND_ROWS rep_id, rig_name, rig_client_id,rig_imo_no,rig_manager,rig_type,rig_classification,rig_remarks,c.client_name,
+		rl.rl_username
+		FROM rigs r
+		LEFT JOIN clients c
+		ON r.rig_client_id = c.client_id
+		LEFT JOIN rig_login rl
+		ON rl.rl_rep_id=r.rep_id
+		WHERE r.rep_id = '".$this->rep_id."'";
+		$result = $this->objCommonFunc->executeQuery($sqlSel);
+		return $this->objCommonFunc->fetchAssoc($result);
+	}
+
+	/*Function for fetching client name*/
+	function getClientNameList() {
+		$sqlsel = "SELECT SQL_CALC_FOUND_ROWS client_id,client_name FROM clients";
+		$result = $this->objCommonFunc->executeQuery($sqlsel);
+		return $result;
+	}
+
+	/*Function for fetching rig name*/
+	function getRigNameList() {
+		$sqlsel = "SELECT SQL_CALC_FOUND_ROWS rig_id,rig_name FROM rigs";
+		$result = $this->objCommonFunc->executeQuery($sqlsel);
+		return $result;
+	}
+
+	/*Function for fetching category name*/
+	function getCategoryNameList() {
+		$sqlsel = "SELECT SQL_CALC_FOUND_ROWS cat_id,cat_name FROM categories";
+		$result = $this->objCommonFunc->executeQuery($sqlsel);
+		return $result;
+	}
+
+	/*Function for fetching category name*/
+	function getSubCategoryNameList($subcat_id = null) {
+		$sqlsel = "SELECT SQL_CALC_FOUND_ROWS subcat_id,subcat_name,subcat_cat_id FROM sub_categories
+		WHERE  subcat_cat_id='".$subcat_id."'";
+		$result = $this->objCommonFunc->executeQuery($sqlsel);
+		return $result;
+	}
+}
+$feedback = new FEEDBACK();
+?>

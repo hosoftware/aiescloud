@@ -1,0 +1,321 @@
+<?php
+include_once"control/common.php";
+class DISPLAY_REPORT {
+	function __construct() {
+		$this->page = 0;
+		$this->rep_id=0;
+		/*do action changes*/
+		$this->objCommonFunc = new COMMONFUNC();
+		$this->objPagination = new PAGINATION();
+		if(!empty($_REQUEST['page'])) {
+			$this->page = $_REQUEST['page'];
+		}
+		if(empty($_REQUEST['doAction'])) {
+			$this->doAction = "";
+		}
+		else {
+			$this->doAction = $_REQUEST['doAction'];
+		}
+
+		if(isset($_REQUEST['rep_id'])) {
+			$this->rep_id = $_REQUEST['rep_id'];
+		}
+
+		if(!empty($_REQUEST['txtFilterName'])) {
+			$this->txtFilterName = $_REQUEST['txtFilterName'];
+		}
+		else {
+			$this->txtFilterName = "";
+		}
+
+		if(!empty($_REQUEST['txtInspectionDate'])) {
+			$this->txtInspectionDate = $_REQUEST['txtInspectionDate'];
+		}
+		else {
+			$this->txtInspectionDate = "";
+		}
+
+		if(!empty($_REQUEST['txtNextInspectionDate'])) {
+			$this->txtNextInspectionDate = $_REQUEST['txtNextInspectionDate'];
+		}
+		else {
+			$this->txtNextInspectionDate = "";
+		}
+		$this->params = "txtFilterName=".$this->txtFilterName."&txtNextInspectionDate=".$this->txtNextInspectionDate."&txtInspectionDate=".$this->txtInspectionDate;
+
+		if(isset($_REQUEST['doAction']) && $_REQUEST['doAction']=='CLEAR') {
+			$this->txtFilterName ="";
+			$this->txtInspectionDate = "";
+			$this->txtNextInspectionDate = "";
+			$this->doAction ="";
+		}
+
+		if($this->doAction =='ADD_REPORT' || $this->doAction =='UPDATE_REPORT') {
+			if(!empty($_FILES['txtFile']['name'])) {
+				$extn = substr($_FILES['txtFile']['name'],-3);
+				if($extn !='pdf') {
+					echo "Please upload PDF File";exit;
+				}
+
+			}
+			if(!empty($_FILES['txtFile2']['name'])) {
+				$extn = substr($_FILES['txtFile2']['name'],-3);
+				if($extn !='swf') {
+					echo "Please upload Flash(.swf) File";exit;
+				}
+
+			}
+
+		}
+
+		if(!empty($_REQUEST['submit']) && $_REQUEST['submit']=='CANCEL') {
+			header('location:'.FILENAME);
+		}
+
+		if(!empty($_REQUEST['doAction'])) {
+			switch($_REQUEST['doAction']) {
+				case 'ADDSUBCATEGORY':
+					$cat_id = $_REQUEST['cat_id'];
+					$sub_cat_id = $_REQUEST['sub_cat_id'];
+					$sqlins = "INSERT INTO sub_categories(subcat_cat_id,subcat_name)
+					VALUES('".addslashes($_REQUEST['cat_id'])."',
+					'".addslashes($_REQUEST['sub_cat_id'])."')";
+					$this->objCommonFunc->executeQuery($sqlins);
+					$rslt = $this->getSubCategoryNameList($cat_id);
+					$str = '<select name="txtSubCat" id="txtSubCat"  class="txtfield"><option value=""> -- Select Subcategory-- </option>';
+						while($row = $this->objCommonFunc->fetchAssoc($rslt)) {
+							$str .='<option value="'.$row['subcat_id'].'"';
+							if(!empty($_REQUEST['txtSubCat']) && $_REQUEST['txtSubCat'] == $row['subcat_id']) { $str .=" selected";}
+							$str .= '>'.$row['subcat_name'].'</option>';
+						}
+					$str .= '</select>';
+					print($str);
+					break;
+				case"ADD_REPORT":
+					$key = md5(CLIENTNAME);
+					$sqlIns = "INSERT INTO reports (rep_client_id,rep_rig_id,rep_cat_id,rep_sub_cat_id,rep_desc,rep_insp_date,rep_next_insp_date,rep_comments)
+					VALUES('".addslashes($_REQUEST['txtClientName'])."',
+					'".addslashes($_REQUEST['txtRig'])."',
+					'".addslashes($_REQUEST['txtCat'])."',
+					'".addslashes($_REQUEST['txtSubCat'])."',
+					'".addslashes($_REQUEST['txtTagno'])."',
+					'".addslashes($this->objCommonFunc->date2sql($_REQUEST['txtInspectionDate']))."',
+					'".addslashes($this->objCommonFunc->date2sql($_REQUEST['txtNextInspectionDate']))."',
+					'".addslashes($_REQUEST['txtComments'])."'
+					)";
+					$this->objCommonFunc->executeQuery($sqlIns);
+					$id = $this->objCommonFunc->lastInsertId();
+					if(!empty($_FILES['txtFile']['name'])) {
+						$folder = 'dms_files/';
+						$filename = "dms_".$id."_".$_FILES['txtFile']['name'];
+						$path = $folder.$filename;
+						move_uploaded_file($_FILES["txtFile"]["tmp_name"], $path);
+						$sql_upd = "UPDATE reports SET rep_file='".$filename."' WHERE rep_id='".$id."'";
+						$this->objCommonFunc->executeQuery($sql_upd);
+					}
+					if(!empty($_FILES['txtFile2']['name'])) {
+						$folder = 'dms_files/';
+						$filename = "dms_".$id."_".$_FILES['txtFile2']['name'];
+						$path = $folder.$filename;
+						move_uploaded_file($_FILES["txtFile2"]["tmp_name"], $path);
+						$sql_upd = "UPDATE reports SET rep_file2='".$filename."' WHERE rep_id='".$id."'";
+						$this->objCommonFunc->executeQuery($sql_upd);
+					}
+					print('SUCCESS');
+					exit;
+					//header('location:'.FILENAME."?page=".$this->page);
+					break;
+				case "UPDATE_REPORT":
+					$sqlUpd = "UPDATE reports
+					SET rep_client_id='".addslashes($_REQUEST['txtClientName'])."',
+					rep_rig_id='".addslashes($_REQUEST['txtRig'])."',
+					rep_cat_id='".addslashes($_REQUEST['txtCat'])."',
+					rep_sub_cat_id='".addslashes($_REQUEST['txtSubCat'])."',
+					rep_desc='".addslashes($_REQUEST['txtTagno'])."',
+					rep_insp_date='".addslashes($this->objCommonFunc->date2sql($_REQUEST['txtInspectionDate']))."',
+					rep_next_insp_date='".addslashes($this->objCommonFunc->date2sql($_REQUEST['txtNextInspectionDate']))."',
+					rep_comments = '".addslashes($_REQUEST['txtComments'])."'
+					WHERE rep_id = '".addslashes($this->rep_id)."'";
+					$this->objCommonFunc->executeQuery($sqlUpd);
+					if(!empty($_FILES['txtFile']['name'])) {
+						//fetch previous file name
+						$arrInfo = $this->objCommonFunc->getSingleRecInfo("rep_file","reports","rep_id=".$this->rep_id);
+						$prev_file = 'dms_files/'.$arrInfo['rep_file'];
+						unlink($prev_file);
+						$folder = 'dms_files/';
+						$filename = "dms_".$this->rep_id."_".$_FILES['txtFile']['name'];
+						$path = $folder.$filename;
+						if(move_uploaded_file($_FILES["txtFile"]["tmp_name"], $path)) {
+							$sql_upd = "UPDATE reports SET rep_file='".$filename."' WHERE rep_id='".$this->rep_id."'";
+							$this->objCommonFunc->executeQuery($sql_upd);
+						}
+					}
+					if(!empty($_FILES['txtFile2']['name'])) {
+						$folder = 'dms_files/';
+						$filename = "dms_".$this->rep_id."_flash_".$_FILES['txtFile2']['name'];
+						$path = $folder.$filename;
+						move_uploaded_file($_FILES["txtFile2"]["tmp_name"], $path);
+						$sql_upd = "UPDATE reports SET rep_file2='".$filename."' WHERE rep_id='".$this->rep_id."'";
+						$this->objCommonFunc->executeQuery($sql_upd);
+					}
+					print('SUCCESS');
+					exit;
+					//header('location:'.FILENAME."?page=".$this->page."&rep_id=".$this->rep_id);
+					break;
+				case "DELETE_REPORT":
+					$this->rep_id = $_REQUEST['rep_id'];
+					$sqldel = "DELETE FROM reports WHERE rep_id='".$this->rep_id."'";
+					$this->objCommonFunc->executeQuery($sqldel);
+					$sqldel = "DELETE FROM rig_login WHERE rl_rep_id='".$this->rep_id."'";
+					$this->objCommonFunc->executeQuery($sqldel);
+					header('location:'.FILENAME."?page=".$this->page);
+					break;
+			}
+		}
+	}
+
+	/*function for fetching client*/
+	function  getReportInfo() {
+		$sqlSel = "SELECT SQL_CALC_FOUND_ROWS rep_id,rep_client_id,rep_rig_id,rep_cat_id,rep_sub_cat_id,rep_desc,rep_insp_date,rep_next_insp_date,
+		rep_test_proof_date,rep_due_proof_date,rep_tpi_date,rep_next_tpi_date,rep_comments,rep_file,rep_created_date,cat_name,subcat_name,rep_file2,
+		rep_file3,rep_file4,rep_file5,no_of_files, DATE(rep_created_date) rep_created_date
+		FROM reports rep
+		LEFT JOIN clients c
+		ON rep.rep_client_id = c.client_id
+		LEFT JOIN rigs rg
+		ON rg.rig_id=rep.rep_rig_id
+		LEFT JOIN categories cat
+		ON rep.rep_cat_id = cat.cat_id
+		LEFT JOIN sub_categories subcat
+		ON rep.rep_sub_cat_id = subcat.subcat_id
+		WHERE (end_effdt IS NULL OR end_effdt='0000-00-00') AND rg.rig_id = '".$_SESSION['user_id']."'
+		";
+
+		if(!empty($this->txtFilterName)) {
+			$sqlSel .= " AND rep_desc LIKE '%".$this->txtFilterName."%'";
+		}
+
+		if(!empty($this->txtInspectionDate)) {
+			$sqlSel .= " AND rep_insp_date ='".$this->objCommonFunc->date2sql($this->txtInspectionDate)."'";
+		}
+
+		if(!empty($this->txtNextInspectionDate)) {
+			$sqlSel .= " AND rep_next_insp_date ='". $this->objCommonFunc->date2sql($this->txtNextInspectionDate)."'";
+		}
+
+		if(!empty($_REQUEST['cat_id'])) {
+			$sqlSel .= " AND rep.rep_cat_id = '".$_REQUEST['cat_id']."'";
+		}
+
+		if(!empty($_REQUEST['sub_cat_id'])) {
+			$sqlSel .= " AND rep.rep_sub_cat_id = '".$_REQUEST['sub_cat_id']."'";
+		}
+
+		$sqlSel .= " ORDER BY rep_insp_date DESC";
+
+		if($this->page==0) {
+			$sqlSel .= " LIMIT 0,".LIMIT;
+		}
+		else {
+			$sqlSel .= " LIMIT ".((LIMIT*($this->page-1))).",".(LIMIT);
+		}
+		$result = $this->objCommonFunc->executeQuery($sqlSel);
+		return $result;
+	}
+
+	function  roGgetRigInfo() {
+		$sqlSel = "SELECT SQL_CALC_FOUND_ROWS rep_id, rig_name, rig_client_id,rig_imo_no,rig_manager,rig_type,rig_classification,rig_remarks,c.client_name,
+		rl.rl_username
+		FROM rigs r
+		LEFT JOIN clients c
+		ON r.rig_client_id = c.client_id
+		LEFT JOIN rig_login rl
+		ON rl.rl_rep_id=r.rep_id
+		WHERE r.rep_id = '".$this->rep_id."'";
+		$result = $this->objCommonFunc->executeQuery($sqlSel);
+		return $this->objCommonFunc->fetchAssoc($result);
+	}
+
+	/*Function for fetching client name*/
+	function getClientNameList() {
+		$sqlsel = "SELECT SQL_CALC_FOUND_ROWS client_id,client_name FROM clients ORDER BY client_name ";
+		$result = $this->objCommonFunc->executeQuery($sqlsel);
+		return $result;
+	}
+
+	/*Function for fetching rig name*/
+	function getRigNameList() {
+		$sqlsel = "SELECT SQL_CALC_FOUND_ROWS rig_id,rig_name FROM rigs ORDER BY rig_name ";
+		$result = $this->objCommonFunc->executeQuery($sqlsel);
+		return $result;
+	}
+
+	/*Function for fetching category name*/
+	function getCategoryNameList() {
+		$sqlsel = "SELECT SQL_CALC_FOUND_ROWS cat_id,cat_name FROM categories ORDER BY cat_name";
+		$result = $this->objCommonFunc->executeQuery($sqlsel);
+		return $result;
+	}
+
+	/*Function for fetching category name*/
+	function getSubCategoryNameList($subcat_id = null) {
+		$sqlsel = "SELECT SQL_CALC_FOUND_ROWS subcat_id,subcat_name,subcat_cat_id FROM sub_categories
+		WHERE  subcat_cat_id='".$subcat_id."' ORDER BY subcat_name";
+		$result = $this->objCommonFunc->executeQuery($sqlsel);
+		return $result;
+	}
+
+	/*function for fetching client*/
+	function  getExpiredReportInfo() {
+		$sqlSel = "SELECT SQL_CALC_FOUND_ROWS rep_id,rep_client_id,rep_rig_id,rep_cat_id,rep_sub_cat_id,rep_desc,rep_insp_date,rep_next_insp_date,
+		rep_test_proof_date,rep_due_proof_date,rep_tpi_date,rep_next_tpi_date,rep_comments,rep_file,rep_created_date,cat_name,subcat_name,rep_file2,
+		rep_file3,rep_file4,rep_file5,no_of_files,c.client_name,rg.rig_name
+		FROM reports rep
+		LEFT JOIN clients c
+		ON rep.rep_client_id = c.client_id
+		LEFT JOIN rigs rg
+		ON rg.rig_id=rep.rep_rig_id
+		LEFT JOIN categories cat
+		ON rep.rep_cat_id = cat.cat_id
+		LEFT JOIN sub_categories subcat
+		ON rep.rep_sub_cat_id = subcat.subcat_id
+		WHERE (end_effdt IS NULL OR end_effdt='0000-00-00') ";
+		if($_SESSION['type'] == 'R') {
+			$sqlSel .= "AND rg.rig_id = '".$_SESSION['user_id']."'";
+		}
+		$sqlSel .= "AND DATEDIFF(CURDATE(),rep_next_insp_date)>90";
+
+		if(!empty($this->txtFilterName)) {
+			$sqlSel .= " AND rep_desc LIKE '%".$this->txtFilterName."%'";
+		}
+
+		if(!empty($this->txtInspectionDate)) {
+			$sqlSel .= " AND rep_insp_date ='".$this->objCommonFunc->date2sql($this->txtInspectionDate)."'";
+		}
+
+		if(!empty($this->txtNextInspectionDate)) {
+			$sqlSel .= " AND rep_next_insp_date ='". $this->objCommonFunc->date2sql($this->txtNextInspectionDate)."'";
+		}
+
+		if(!empty($_REQUEST['cat_id'])) {
+			$sqlSel .= " AND rep.rep_cat_id = '".$_REQUEST['cat_id']."'";
+		}
+
+		if(!empty($_REQUEST['sub_cat_id'])) {
+			$sqlSel .= " AND rep.rep_sub_cat_id = '".$_REQUEST['sub_cat_id']."'";
+		}
+
+		$sqlSel .= " ORDER BY rep_insp_date DESC";
+
+		if($this->page==0) {
+			$sqlSel .= " LIMIT 0, 5";
+		}
+		else {
+			$sqlSel .= " LIMIT ".((LIMIT*($this->page-1))).",".(LIMIT);
+		}
+		$result = $this->objCommonFunc->executeQuery($sqlSel);
+		return $result;
+	}
+}
+$display_report = new DISPLAY_REPORT();
+?>

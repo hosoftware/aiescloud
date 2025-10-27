@@ -1,0 +1,382 @@
+<?php
+include_once"control/common.php";
+class DIRECTORY1 {
+	function DIRECTORY1() {
+		$this->page = 0;
+		$this->rig_id=0;
+		/*do action changes*/
+		$this->objCommonFunc = new COMMONFUNC();
+		$this->objPagination = new PAGINATION();
+		if(!empty($_REQUEST['page'])) {
+			$this->page = $_REQUEST['page'];
+		}
+		if(empty($_REQUEST['id'])) $_REQUEST['id']="";
+
+		if(empty($_REQUEST['doAction'])) {
+			$this->doAction = "";
+		}
+		else {
+			$this->doAction = $_REQUEST['doAction'];
+		}
+
+		$this->str_folder = "";
+
+		if(isset($_REQUEST['doAction'])&& $_REQUEST['doAction'] =='CLEAR') {
+			$this->txtFilterName ="";
+			$this->doAction ="";
+		}
+
+		if(!empty($_REQUEST['submit']) && $_REQUEST['submit']=='CANCEL') {
+			header('location:'.FILENAME);
+		}
+		if(!empty($_REQUEST['doAction'])) {
+			switch($_REQUEST['doAction']) {
+				/*Function for moving file to specified folder*/
+				case "MOVE_FILE_TO_TARGET_FOLDER":
+					$target_folder = $_REQUEST['target_folder'];
+					$id = $_REQUEST['id'];
+					$file_id = $_REQUEST['file_id'];
+
+					$sql_sel = "SELECT *  FROM file_struct WHERE id=".$_REQUEST['file_id'];
+					$result = mysql_query($sql_sel);
+					$row = mysql_fetch_assoc($result);
+
+					$sql_sel = "SELECT *  FROM folder_struct WHERE id=".$_REQUEST['target_folder'];
+					$result1 = mysql_query($sql_sel);
+					$row1 = mysql_fetch_assoc($result1);
+
+
+					if($this->is_file_name_exist_in_folder($target_folder,$row['name'])) {
+						print "Sorry! Yocan't move file to this folder, because this folder have a file with same name, rename this file and move";
+						exit;
+					}
+					else {
+						if(rename($row['file_path'],$row1['folder_path']."/".$row['name'])) {
+							$sql_upd = "UPDATE file_struct SET file_path='".$row1['folder_path']."/".$row['name']."',
+							folder_id ={$target_folder}
+							WHERE id={$file_id}";
+							mysql_query($sql_upd);
+							print "FM";
+						}
+					}
+					exit;
+					break;
+				/*function for fetching */
+				case "TARGET_FOLDER_NAME":
+					$sql_sel = "SELECT *  FROM folder_struct WHERE id=".$_REQUEST['folder_id'];
+					$result = mysql_query($sql_sel);
+					$row = mysql_fetch_assoc($result);
+					print $row['folder_name'];
+					exit;
+					break;
+				/*function for deleting folder*/
+				case"DELETE_FOLDER":
+					$folder_id = $_REQUEST['folder_id'];
+					if($this->is_file_exists($folder_id)) {
+						print "Sorry! You can't be delete this folder due to files(s) existing under this folder";
+						exit;
+					}
+					if($this->is_subfolder_exist($folder_id)) {
+						print "Sorry! You can't be delete this folder due to folder(s) existing under this folder";
+						exit;
+					}
+					$sql_sel = "SELECT *  FROM folder_struct WHERE id=".$folder_id;
+					$result = mysql_query($sql_sel);
+					$row = mysql_fetch_assoc($result);
+
+					$file_path = $row['folder_path'];
+					$sql_del = " DELETE FROM folder_struct WHERE id=".$folder_id;
+					mysql_query($sql_del);
+					@rmdir($file_path);
+					print "Folder has been deleted successfully.";
+					exit;
+					break;
+				case "DELETE_FILE":
+					$file_id = $_REQUEST['file_id'];
+					$folder_id = $_REQUEST['folder_id'];
+					$sql_sel = "SELECT *
+								FROM file_struct
+								WHERE id=".$file_id."
+								AND folder_id=".$folder_id;
+					$result = mysql_query($sql_sel);
+					$row = mysql_fetch_assoc($result);
+					$file_path = $row['file_path'];
+					/*Deleting the record*/
+					$sql_del = " DELETE FROM file_struct WHERE id=".$file_id;
+					mysql_query($sql_del);
+					unlink($file_path);
+					print "File has been deleted successfully.";
+					exit;
+					break;
+				case "MOVE_FOLDER":
+					$source_folder_id = $_REQUEST['id'];
+					$destination_folder = $_REQUEST['target_folder'];
+					$destination_folder_id = $_REQUEST['target_folder'];
+					if($source_folder_id==$destination_folder_id) {
+						//$_REQUEST['doAction'] ='Move_Dir';
+						print "Sorry  source and destination folder are same.";
+					}
+					//print $source_folder_id;
+					$source_sql = "SELECT * FROM folder_struct WHERE id=".$source_folder_id;
+					$result = mysql_query($source_sql);
+					$row = mysql_fetch_assoc($result);
+					$source_folder_path = $row['folder_path']."";
+
+					$destination_sql = "SELECT * FROM folder_struct WHERE id=".$destination_folder_id;
+					$result1 = mysql_query($destination_sql);
+					$row1 = mysql_fetch_assoc($result1);
+					$destination_folder_path = $row1['folder_path']."/".$row['folder_name'];
+
+					if(rename($source_folder_path,$destination_folder_path)){
+						$sql_move = "UPDATE folder_struct SET sub_folder_id =".$destination_folder_id.",
+						folder_path = '".$destination_folder_path."'
+						WHERE id=".$source_folder_id;
+						mysql_query($sql_move);
+						$sql_sel = "SELECT *  FROM file_struct WHERE folder_id=".$source_folder_id;
+						$result = mysql_query($sql_sel);
+						while($row = mysql_fetch_assoc($result)) {
+							$sql_upd = "UPDATE file_struct
+							SET file_path = '".$destination_folder_path."/".$row['name']."'
+							WHERE folder_id = $source_folder_id";
+							mysql_query($sql_upd);
+						}
+						//@rmdir($source_folder_path);
+						print "Folder has been moved successfully";
+					}
+					else {
+						print "Sorry! folder can't be moved successfully";
+					}
+					exit;
+					break;
+				case"CREATE_FOLDER":
+					if(!empty($_REQUEST['folder_name'])) {
+						$main_folder = "./dms_directory/";
+						$folder_name = $_REQUEST['folder_name'];
+						if(!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])){
+							$sql=" SELECT folder_path FROM folder_struct WHERE id=".$_REQUEST['id'];
+							$rslt = mysql_query($sql);
+							$row = mysql_fetch_assoc($rslt);
+							$main_folder = $row['folder_path']."/";
+						}
+						$structure = $main_folder.$folder_name;
+						if (@mkdir($structure, 0777, true)) {
+							$sql_ins = "INSERT INTO folder_struct(sub_folder_id,folder_name,folder_path)
+							VALUES('".addslashes($_REQUEST['id'])."',
+							'".addslashes($_REQUEST['folder_name'])."',
+							'".addslashes($structure)."'
+							)";
+							mysql_query($sql_ins);
+						}
+						else {
+							//print('Failed to create folders...');
+						}
+						header("location:"."directory.php?id=0");
+						exit;
+					}
+					header("location:"."directory.php?id=0");
+					break;
+					case"FILE_UPLOAD":
+						$folder_id = $_REQUEST['folder_id'];
+						$ql_sel = "SELECT * FROM folder_struct WHERE id=".$folder_id;
+						$rslt = mysql_query($ql_sel);
+						$row = mysql_fetch_assoc($rslt);
+						$folder_path = $row['folder_path'];
+						$filePath = $folder_path."/".$_FILES["file_name"]["name"];
+						if($this->is_file_name_exist_in_folder($folder_id, $_FILES["file_name"]["name"])) {
+							header("location:"."directory.php?id=".$_REQUEST['id']."&err=FE");
+						}
+						if(move_uploaded_file($_FILES["file_name"]["tmp_name"], $filePath)) {
+							$sql_ins = "INSERT INTO file_struct(folder_id,name,file_path)
+							VALUES('".$folder_id."','".addslashes($_FILES["file_name"]["name"])."',
+							'".addslashes($filePath)."'
+							)";
+							mysql_query($sql_ins);
+							header("location:"."directory.php?id=".$_REQUEST['id']);
+						}
+						else {
+							header("location:"."directory.php?id=".$_REQUEST['id']."&err=FE");
+						}
+						exit;
+						break;
+					case "DOWNLOAD_FILE":
+						$folder_id = $_REQUEST['id'];
+						$sql = "SELECT * FROM file_struct WHERE id=".$folder_id;
+						$result = mysql_query($sql);
+						$row = mysql_fetch_assoc($result);
+						set_time_limit(0);
+						ignore_user_abort(false);
+						ini_set('output_buffering', 0);
+						ini_set('zlib.output_compression', 0);
+						$file = $row['file_path'];
+						$file_name = $row['name'];
+						//print '<iframe src="'.$file.'" style="width:600px; height:500px;" frameborder="0"></iframe>';exit;
+						if (file_exists($file)) {
+							header('Content-Description: File Transfer');
+							header('Content-type: application/pdf');
+							header('Content-Disposition: attachment; filename='.$file_name);
+							header('Expires: 0');
+							header('Cache-Control: must-revalidate');
+							header('Pragma: public');
+							header('Content-Length: ' . filesize($file));
+							ob_clean();
+							flush();
+							readfile($file);
+							//unlink($file);
+							exit;
+						}
+						break;
+			}
+		}
+		$this->display_folders(0);
+
+	}
+
+	/*function  for dislay folder structure*/
+	function display_folders($folder_id) {
+		if(!empty($_REQUEST['id'])) {
+			$arr_id = $this->tree_traversal($_REQUEST['id']);
+		}
+		else $arr_id = array();
+		if(empty($folder_id)) {
+			$this->str_folder .='<ol class="tree">';
+		}
+		else $this->str_folder .='<ol>';
+
+		$sql = "SELECT * FROM folder_struct WHERE sub_folder_id =".$folder_id;
+		$result = mysql_query($sql);
+		while($row = mysql_fetch_assoc($result)) {
+			$folder_id = $row['id'];
+			if($_SESSION['type']=='D') {
+				$url = 'javascript:'.$row['folder_name'].'~/~'.$row['id'];
+			}
+			else {
+				$url = 'directory.php?id='.$row['id'];
+			}
+			$this->str_folder .='<li draggable="true" data-value="'.$row['folder_name'].'" >';
+				$this->str_folder .='<label for="'.$row['folder_name'].'-'.$row['id'].'"><a href="'.$url.'" alt="sss">'.$row['folder_name'];
+				if($_SESSION['type']=='D') {
+				$this->str_folder .='<div id="toolbox" style="display:none">
+					<ul>
+						<li><a href="directory.php?id='.$row['id'].'&doAction=Sub_Folder">Create Folder</a></li>
+						<li><a href="directory.php?id='.$row['id'].'&doAction=Move_Dir">Move</a></li>
+						<li><a href="javascript:deleteFolder('.$row['id'].')">Delete Folder</a></li>
+						<li><a href="directory.php?id='.$row['id'].'&doAction=File_Upload">Upload File</a></li>
+						<li><a href="directory.php?id='.$row['id'].'">View File</a></li>';
+				if(!empty($_REQUEST['doAction']) && $_REQUEST['doAction']=='MOVE_FILE' && $row['id']!=$_REQUEST['id']) {
+					$this->str_folder .='<li><a href="javascript:jsMoveFile('.$row['id'].')">Move file to this folder</a></li>';
+				}
+				if(!empty($_REQUEST['doAction']) && $_REQUEST['doAction']=='Move_Dir' && $row['id']!=$_REQUEST['id']) {
+					$this->str_folder .='<li><a href="javascript:jsMoveFile('.$row['id'].')">Move Folder to this folder</a></li>';
+				}
+				$this->str_folder .='</ul>
+				</div>';
+				}
+				$this->str_folder .='</a></label> <input type="checkbox"   id="'.$row['folder_name'].'-'.$row['id'].'"';
+				if(in_array($row['id'],$arr_id)) {
+					$this->str_folder .=' checked ';
+				}
+				$this->str_folder .='/>
+				';
+				if(DIRECTORY1::is_subfolder_exist($folder_id)) {
+					DIRECTORY1::display_folders($folder_id);
+				}
+			$this->str_folder .='</li>';
+		}
+		$this->str_folder .='</ol>';
+	}
+
+
+
+	/*function for */
+	function is_subfolder_exist($folder_id) {
+		$sql_cal = "SELECT count(id) no FROM folder_struct WHERE sub_folder_id =".$folder_id;
+		$result = mysql_query($sql_cal);
+		$row = mysql_fetch_assoc($result);
+		if($row['no']>0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	/*Function  for checking whether files are existing under the specified folder*/
+	function is_file_exists($folder_id) {
+		$sql_sel = "SELECT count(id) no
+					FROM file_struct
+					WHERE folder_id=".$folder_id;
+
+		$result = mysql_query($sql_sel);
+		$row = mysql_fetch_assoc($result);
+		if($row['no']>0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	function display_files($folder_id) {
+		$sql_sel = "SELECT * FROM file_struct WHERE folder_id=".$folder_id;
+		$result = mysql_query($sql_sel);
+		$sql="SELECT folder_name FROM folder_struct WHERE id='".$folder_id."'";
+					$rslt = mysql_query($sql);
+					$row = mysql_fetch_assoc($rslt);
+
+		$str = "<br/><br/><table border=1 style='background-color:white;' width=80% align=center cellspacing=0 cellpadding=5>
+		<tr><td colspan='4' align='center'><strong style='color:red;'>FILES IN '".$row['folder_name']."'</strong></td></tr>";
+		if($result && mysql_num_rows($result)>0) {
+			while($row = mysql_fetch_assoc($result)) {
+				$str .= "<tr><td><i class='file-con'><a href='directory.php?doAction=DOWNLOAD_FILE&id=".$row['id']."'>".$row['name']."</a></i></td><td align=center><a href='directory.php?doAction=DOWNLOAD_FILE&id=".$row['id']."'><img src='images/download.png' height='16' width='25' title='Download' target='_blank'></a></td><td align=center><a href='javascript:jsdeleteFile(".$row['id'].")'><img src='images/delete.png' height='16' width='25' title='Delete File' target='_blank'></a></td>
+				<td align=center><a href='directory.php?doAction=MOVE_FILE&id=".$folder_id."&file_id=".$row['id']."'><img src='images/move_file.png' height='16' width='25' title='Move File' target='_blank'></a></td></tr>";
+			}
+		}
+		$str .= "</table>";
+		print $str;
+	}
+
+	// function for finding the directory structure
+	function tree_traversal($id) {
+		$arrId = array();
+		$parent_id = $id;
+		while($parent_id > 0) {
+			array_push($arrId,$parent_id);
+			 $sql_cal = "SELECT sub_folder_id FROM folder_struct WHERE id =".$parent_id;
+			$result = mysql_query($sql_cal);
+			$row = mysql_fetch_assoc($result);
+			$parent_id = $row['sub_folder_id'];
+		}
+		return $arrId;
+	}
+
+	function is_parentr_exist($folder_id) {
+		$sql_cal = "SELECT sub_folder_id FROM folder_struct WHERE id =".$folder_id;
+		$result = mysql_query($sql_cal);
+		$row = mysql_fetch_assoc($result);
+		if($row['no']>0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	/*Function for checking whether the file is exists in the specified folder*/
+
+	function is_file_name_exist_in_folder($target_folder_id, $file_name) {
+		$sql_sel = "SELECT count(id) no
+					FROM file_struct
+					WHERE folder_id={$target_folder_id}
+					AND name LIKE '".$file_name."'";
+		$result = mysql_query($sql_sel);
+		$row = mysql_fetch_assoc($result);
+		if($row['no']>0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+}
+$directory1 = new DIRECTORY1();
+?>

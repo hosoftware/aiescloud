@@ -1,0 +1,56 @@
+<?php
+class COMMONFUNC {
+	function __construct() {
+		$this->objsyst = new SYSTEMCONNECTION();
+		/*Function for fetching sigrecinfo*/
+	}
+	function getSingleRecInfo($select,$from,$where){
+		$sql_sel = " SELECT ".$select;
+		$sql_sel .= " FROM ".$from;
+		$sql_sel .= " WHERE ".$where;
+		$result = mysqli_query($this->objsyst->dbcon,$sql_sel);
+		$row = mysqli_fetch_assoc($result);
+		return $row;
+	}
+
+	/*Function Row Get Info*/
+	function rowGetInfo($select,$from,$where) {
+		$sql_sel = " SELECT ".$select;
+		$sql_sel .= " FROM ".$from;
+		$sql_sel .= " WHERE ".$where;
+		$result = mysqli_query($this->objsyst->dbcon,$sql_sel);
+		return $result;
+	}
+
+	function executeQuery($sql) {
+		//print mysqli_query($this->objsyst->dbcon,$sql);
+		return mysqli_query($this->objsyst->dbcon,$sql);
+	}
+
+	function fetchAssoc($result) {
+		return mysqli_fetch_assoc($result);
+	}
+
+	function lastInsertId() {
+		return  mysqli_insert_id($this->objsyst->dbcon);
+	}
+
+	function date2sql($date) {
+	    if(!empty($date)) {
+		$arrDate = explode('/',$date);
+		$date = $arrDate[2]."-".$arrDate[1]."-".$arrDate[0];
+		return $date;
+	    }
+	}
+
+	function sql2date($date) {
+		$arrDate = explode('-',$date);
+		$date = $arrDate[2]."/".$arrDate[1]."/".$arrDate[0];
+		return $date;
+	}
+
+	function getNumRows($result) {
+		return mysqli_num_rows($result);
+	}
+}
+?>

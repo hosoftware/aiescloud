@@ -1,0 +1,240 @@
+<?php
+include_once "control/adminuser.class.php";
+?><!doctype html>
+<html lang="en">
+  <head>
+    <title>Aries Cloud</title><?php
+	include_once "model/headerlinks.php";
+  ?><script language="javascript">
+		function frmSubmit(objFrm) {
+			
+
+			if(objFrm.txtUserName.value=="") {
+				document.getElementById('user_name').style.display="block";
+				objFrm.txtUserName.focus();
+				return false;
+			}
+			else {
+				document.getElementById('user_name').style.display="none";
+			}
+
+			if(objFrm.txtPassword.value=="") {
+				document.getElementById('password').style.display="block";
+				objFrm.txtPassword.focus();
+				return false;
+			}
+			else {
+				document.getElementById('password').style.display="none";
+			}
+
+			if(objFrm.txtRPassword.value=="") {
+				document.getElementById('rpassword').style.display="block";
+				objFrm.txtRPassword.focus();
+				return false;
+			}
+			else {
+				document.getElementById('rpassword').style.display="none";
+			}
+
+		}
+		/*Function for deleting records*/
+		function deleteRec(path,id,page) {
+			if(confirm('Are you sure to delete this record')) {
+				location.href= path+"?doAction=DELETE_CLIENT&cleint_id="+id+"&page="+page;
+			}
+		}
+		/*Function for submitting Password*/
+		function frmPassSubmit(objFrm) {
+			if(objFrm.txtPassword.value=="") {
+				document.getElementById('password').style.display="block";
+				objFrm.txtPassword.focus();
+				return false;
+			}
+			else {
+				document.getElementById('password').style.display="none";
+			}
+
+			if(objFrm.txtRPassword.value=="") {
+				document.getElementById('rpassword').style.display="block";
+				objFrm.txtRPassword.focus();
+				return false;
+			}
+			else {
+				document.getElementById('rpassword').style.display="none";
+			}
+		}
+  </script>
+  </head>
+   <body>
+		<div class="main"><!-- topbar start --><?php
+			include_once "model/topbar.php";
+			?><!-- topbar end -->
+			<!-- navigation bar start--><?php
+			include_once "model/navigation.php";
+			?><!-- navigation bar end-->
+				<!-- left bar start --><?php
+			include_once "model/leftbar.php";
+			?><div class="clear">
+				</div>
+				<!-- left bar end -->
+				<!-- Content start -->
+				<div class="content"><?php	
+					switch($adminuser->doAction) {
+						case"":
+							$reslt = $adminuser->getRigInfo();
+								$r_rec = 	$adminuser->objCommonFunc->executeQuery("SELECT FOUND_ROWS() no");
+							$row_rec = mysqli_fetch_assoc($r_rec);
+							$total_rec = $row_rec['no'];
+							?><div class="subcontent">
+								<span class="heading1"><strong>ADMIN USER MANAGEMENT</strong></span>
+								<div class="search">
+									<div class="div_left">
+										<form method="post" action="<?php print(FILENAME)?>">
+										<input type="text" name="txtFilterName" value="<?php print($adminuser->txtFilterName)?>" class="txtfield" size="30"/>
+										<input type="submit" value="SEARCH" class="button1"/>&nbsp;<a href="<?php print(FILENAME)?>?doAction=CLEAR" class="button1">CLEAR</a>
+										</form>
+									</div>
+									<div class="div_right">
+										<form method="post" action="<?php print(FILENAME)?>">
+										<input type="hidden" name="doAction" value="ADD"/>
+										<span style="float:right;"><input type="submit" value="ADD" class="button1"/></span>
+										</form>
+									</div>
+								</div>
+								
+								<table class="mainTable" cellpadding="0" cellspacing="0">
+									<tr><th>Username</th><th width="2%" colspan="3">Action</th></tr><?php
+								while($row = $adminuser->objCommonFunc->fetchAssoc($reslt)) {
+									?><tr><td><?php print($row['rl_username'])?></td>
+									<td align="center"><a href="<?php print(FILENAME)?>?rig_id=<?php print($row['rig_id'])?>&doAction=EDIT"><img src="images/edit.jpeg" height="16" width="25" title="Edit"></i></a></td>
+									<td align="center"><a href="<?php print(FILENAME)?>?rig_id=<?php print($row['rig_id'])?>&doAction=CHANGEPASSWORD"><img src="images/password.png" height="16" width="25" title="Change Password"></i></a></td>
+									<td align="center"><a href="javascript:deleteRec('<?php print(FILENAME)?>','<?php print($row['rig_id'])?>','<?php print($adminuser->page)?>')"><img src="images/delete.png" height="16" width="25" title="Delete"></i></a></td></tr><?php
+								}
+								?></table><?php
+									$adminuser->objPagination->showPagination($total_rec,FILENAME,$adminuser->params);
+							?></div><?php
+							break;
+						case"ADD":
+						case"EDIT":
+							if(isset($_REQUEST['rig_id'])){
+								$arrInfo = $adminuser->roGgetRigInfo();
+								
+								$_REQUEST['txtUserName'] = $arrInfo['rl_username'];
+								$heading = "ADMINUSER MANAGEMENT- Edit Admin ";
+							}
+							else {
+								$heading = "ADMINUSER MANAGEMENT- Add Admin";
+							}
+							
+							if(empty($_REQUEST['txtPassword'])) {
+								$_REQUEST['txtPassword'] = "";
+							}
+							if(empty($_REQUEST['txtRPassword'])) {
+								$_REQUEST['txtRPassword'] = "";
+							}
+							if(empty($_REQUEST['txtRemarks'])) {
+								$_REQUEST['txtRemarks'] = "";
+							}
+							if(empty($_REQUEST['txtUserName'])) {
+								$_REQUEST['txtUserName'] = "";
+							}
+							$rsl1 = $adminuser->getClientNameList();
+							?><div class="subcontent">
+								<div class="search">
+								<span class="heading1"><strong><?php print($heading)?></strong></span><?php
+								if(!empty($adminuser->errMsg)) {
+								?><br/><span style='color:red;text-align:center;'><strong><?php print($adminuser->errMsg)?></strong></span><?php
+								}
+								?></div>
+								<div class="frm-content">
+									<form method="post" action="<?php print(FILENAME)?>" onsubmit="return frmSubmit(this)">
+										<table border="0" align="center" >
+											
+											<tr>
+												<td>User Name<strong class="astric">*</strong></td><td><input type="text" name="txtUserName" value="<?php print(htmlentities($_REQUEST['txtUserName'],ENT_QUOTES))?>" class="txtfield" size="30" id="txtUserName"/>
+												<div class="arrow_box" id='user_name' style="display:none;">Please enter User Name</div>
+												</td>
+											</tr><?php
+											if(empty($adminuser->rig_id)){
+											?><tr>
+												<td>Password<strong class="astric">*</strong></td><td><input type="password" name="txtPassword" value="<?php print(htmlentities($_REQUEST['txtPassword'],ENT_QUOTES))?>" class="txtfield" size="30" id="txtPassword"/>
+												<div class="arrow_box" id='password' style="display:none;">Please enter Password/<div>
+												</td>
+											</tr>
+											<tr>
+												<td>Re-type your password<strong class="astric">*</strong></td><td><input type="password" name="txtRPassword" value="<?php print(htmlentities($_REQUEST['txtRPassword'],ENT_QUOTES))?>" class="txtfield" size="30" id="txtRPassword"/>
+												<div class="arrow_box" id='rpassword' style="display:none;">Please Re-type your password</div>
+												</td>
+											</tr><?php
+												}
+											?><?php
+												
+											?><tr>
+												<td align="center" colspan="2"><input type="submit" value="SUBMIT" class="button1"/><a href="<?php print(FILENAME)?>" class="button1">CANCEL</a></td>
+											</tr>
+										</table>
+										<input type='hidden' name='page' value="<?php print($adminuser->page)?>"/>
+										<input type='hidden' name='rig_id' value="<?php print($adminuser->rig_id)?>"/>
+										<?php
+										if(!empty($_REQUEST['rig_id'])) {
+											?><input type='hidden' name='doAction' value="UPDATE_ADMINUSER"/><?php
+										}
+										else {
+											?><input type='hidden' name='doAction' value="ADD_ADMINUSER"/><?php
+										}
+									?></form>
+								</div>
+							</div><?php
+							break;
+						case"CHANGEPASSWORD":
+							$heading = "ADMINUSER MANAGEMENT- Change Password";
+							
+							if(empty($_REQUEST['txtPassword'])) {
+								$_REQUEST['txtPassword'] = "";
+							}
+							if(empty($_REQUEST['txtRPassword'])) {
+								$_REQUEST['txtRPassword'] = "";
+							}
+							
+							$rsl1 = $adminuser->getClientNameList();
+							?><div class="subcontent">
+								<div class="search">
+								<span class="heading1"><strong><?php print($heading)?></strong></span>
+								</div>
+								<div class="frm-content">
+									<form method="post" action="<?php print(FILENAME)?>" onsubmit="return frmPassSubmit(this)">
+										<table border="0" align="center" ><?php
+											if(!empty($adminuser->rig_id)){
+											?><tr>
+												<td>New Password<strong class="astric">*</strong></td><td><input type="password" name="txtPassword" value="<?php print(htmlentities($_REQUEST['txtPassword'],ENT_QUOTES))?>" class="txtfield" size="30" id="txtPassword"/>
+												<div class="arrow_box" id='password' style="display:none;">Please enter Password/<div>
+												</td>
+											</tr>
+											<tr>
+												<td>Re-type your password<strong class="astric">*</strong></td><td><input type="password" name="txtRPassword" value="<?php print(htmlentities($_REQUEST['txtRPassword'],ENT_QUOTES))?>" class="txtfield" size="30" id="txtRPassword"/>
+												<div class="arrow_box" id='rpassword' style="display:none;">Please Re-type your password</div>
+												</td>
+											</tr><?php
+												}
+											?><tr>
+												<td align="center" colspan="2"><input type="submit" value="SUBMIT" class="button1"/><a href="<?php print(FILENAME)?>" class="button1">CANCEL</a></td>
+											</tr>
+										</table>
+										<input type='hidden' name='page' value="<?php print($adminuser->page)?>"/>
+										<input type='hidden' name='rig_id' value="<?php print($adminuser->rig_id)?>"/>
+										<input type='hidden' name='doAction' value="UPDATE_PASSWORD"/>
+									</form>
+								</div>
+							</div><?php
+							break;
+					}
+				?></div>
+				<!-- Content end -->
+				<div class="clear">
+				</div>
+				<!-- footer start --><?php
+			include_once "model/footer.php";
+			?><!-- footer end -->
+		</div>
+   </body>
+</html>

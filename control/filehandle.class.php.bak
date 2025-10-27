@@ -1,0 +1,191 @@
+<?php
+include_once"control/common.php";
+class FILEHANDLE {
+	function FILEHANDLE() {
+		$this->page = 0;
+		$this->rep_id=0;
+		if(empty($_SESSION['user_id'])) {
+			print "session time out ";
+			exit;
+		}
+		/*do action changes*/
+		$this->objCommonFunc = new COMMONFUNC();
+		$this->objPagination = new PAGINATION();
+		if(!empty($_REQUEST['page'])) {
+			$this->page = $_REQUEST['page'];
+		}
+
+		if(empty($_REQUEST['doAction'])) {
+			$this->doAction = "";
+		}
+		else {
+			$this->doAction = $_REQUEST['doAction'];
+		}
+
+		if(isset($_REQUEST['rep_id'])) {
+			$this->rep_id = $_REQUEST['rep_id'];
+		}
+
+		if(!empty($_REQUEST['txtFilterName'])) {
+			$this->txtFilterName = $_REQUEST['txtFilterName'];
+		}
+		else {
+			$this->txtFilterName = "";
+		}
+
+		if(!empty($_REQUEST['submit']) && $_REQUEST['submit']=='CANCEL') {
+			header('location:'.FILENAME);
+		}
+		if(!empty($_REQUEST['rep_id'])) {
+
+			$rep_id = $_REQUEST['rep_id'];
+			$this->arrInfo = $this->objCommonFunc->getSingleRecInfo("*","reports","rep_id=". $rep_id);
+			if(empty($_REQUEST['doAction'])) {
+				$sql_ins="INSERT INTO activity_log(username,user_id,log_type,ip_address,user_agent)VALUES('".$_SESSION['username']."',
+						'".$_SESSION['user_id']."',
+						'Click to view the file - ".$this->arrInfo['rep_desc']."',
+						'".$_SERVER['REMOTE_ADDR']."',
+						'".addslashes($_SERVER['HTTP_USER_AGENT'])."')";
+
+						$this->objCommonFunc->executeQuery($sql_ins);
+			}
+			if(!empty($_REQUEST['type']) && !empty($this->arrInfo["rep_file".($_REQUEST['type']+1)])) {
+				$this->fileName = "dms_files/".$this->arrInfo["rep_file".($_REQUEST['type']+1)];
+			}
+			else {
+				$this->fileName = "dms_files/dms_".$rep_id."_part".$_REQUEST['type']."_".$this->arrInfo['rep_file'];
+			}
+		}
+
+		if(!empty($_REQUEST['doAction'])) {
+			switch($_REQUEST['doAction']) {
+				case'VIEW':
+					set_time_limit(0);
+					$rep_id = $_REQUEST['rep_id'];
+					$arrInfo = $this->objCommonFunc->getSingleRecInfo("*","reports","rep_id=". $rep_id);
+					$filename = $_SERVER['REQUEST_SCHEME']."://"."dms_files/".$arrInfo[$_REQUEST['type']];
+					$download_rate = 85;
+					set_time_limit(0);
+					ignore_user_abort(false);
+					ini_set('output_buffering', 0);
+					ini_set('zlib.output_compression', 0);
+					$file = "dms_files/".$arrInfo[$_REQUEST['type']];
+					//print '<iframe src="'.$file.'" style="width:600px; height:500px;" frameborder="0"></iframe>';exit;
+					if (file_exists($file)) {
+							header('Content-Description: File Transfer');
+							header('Content-type: application/pdf');
+							header('Content-Disposition: inline;');
+							header('Expires: 0');
+							header('Cache-Control: must-revalidate');
+							header('Pragma: public');
+							header('Content-Length: ' . filesize($file));
+							ob_clean();
+							flush();
+							readfile($file);
+							//unlink($file);
+							exit;
+						}
+					//print '<iframe src="http://docs.google.com/gview?url='.$filename.'&embedded=true" style="width:600px; height:500px;" frameborder="0"></iframe>';
+					/*if(is_file($filename)) {
+							/*Let the browser know that a PDF file is coming.
+							/*header("Content-type: application/pdf");
+							header("Content-Length: " . filesize($filename));
+							// Send the file to the browser.
+							readfile($filename);*/
+							// send headers
+						/*header('Cache-control: private');
+						header('Content-Type: application/octet-stream');
+						header('Content-Length: '.filesize($filename));
+						header('Content-Disposition: filename='.$arrInfo['rep_file']);
+
+						// flush content
+						flush();
+
+						// open file stream
+						$file = fopen($filename, "r");
+
+						while (!feof($file)) {
+
+							// send the current file part to the browser
+							print fread($file, round($download_rate * 1024));
+
+							// flush the content to the browser
+							flush();
+
+							// sleep one second
+							sleep(1);
+						}
+
+						// close file stream
+						fclose($file);
+					}*/
+					exit;
+					break;
+				case "DOWNLOAD":
+
+
+					$rep_id = $_REQUEST['rep_id'];
+					$arrInfo = $this->objCommonFunc->getSingleRecInfo("*","reports","rep_id=". $rep_id);
+					$filename = "dms_files/".$arrInfo['rep_file'];
+
+					$sql_ins="INSERT INTO activity_log(username,user_id,log_type,ip_address,user_agent)VALUES('".$_SESSION['username']."',
+						'".$_SESSION['user_id']."',
+						'Downloaded file - ".$arrInfo['rep_desc']."',
+						'".$_SERVER['REMOTE_ADDR']."',
+						'".addslashes($_SERVER['HTTP_USER_AGENT'])."')";
+
+						$this->objCommonFunc->executeQuery($sql_ins);
+                $name = $arrInfo['rep_file'];
+				 $extnpos  = strrpos($name,'.');
+				$extn = substr($name,($extnpos+1));
+					if (file_exists($filename)) {
+						header('Content-Description: File Transfer');
+						if(	$extn !='pdf') {
+						  	header('Content-type: application/zip');  
+						}
+						else {
+						header('Content-type: application/pdf');
+						}
+						header('Content-Disposition: attachment; filename='.$arrInfo['rep_file']);
+						header('Expires: 0');
+						header('Cache-Control: must-revalidate');
+						header('Pragma: public');
+						header('Content-Length: ' . filesize($filename));
+						ob_clean();
+						flush();
+						readfile($filename);
+						//unlink($file);
+						exit;
+					}
+					break;
+				case "USERMANUAL":
+					$sql_ins="INSERT INTO activity_log(username,user_id,log_type)VALUES('".$_SESSION['username']."',
+						'".$_SESSION['user_id']."',
+						'Downloaded file'
+						)";
+					$this->objCommonFunc->executeQuery($sql_ins);
+
+					$filename = "dms_files/user_manual.pdf";
+					if (file_exists($filename)) {
+						header('Content-Description: File Transfer');
+						header('Content-type: application/pdf');
+						header('Content-Disposition: attachment; filename=Usermanual.pdf');
+						header('Expires: 0');
+						header('Cache-Control: must-revalidate');
+						header('Pragma: public');
+						header('Content-Length: ' . filesize($filename));
+						ob_clean();
+						flush();
+						readfile($filename);
+						//unlink($file);
+						exit;
+					}
+					break;
+			}
+		}
+	}
+
+
+}
+$report = new FILEHANDLE();
+?>

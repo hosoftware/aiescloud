@@ -1,0 +1,13 @@
+<?php
+class SYSTEMCONNECTION {
+	function __construct() {
+		$this->dbhost = "localhost";
+		$this->dbuser = "root";
+		$this->dbpass = "";
+		$this->dbname = "ariescloud";
+		$this->dbcon = mysqli_connect($this->dbhost,$this->dbuser,$this->dbpass) or die("Error in mysql connection");
+		$this->selecteddb = mysqli_select_db($this->dbcon,$this->dbname)or die("Error in db connection");
+	}
+}
+$objsyst = new SYSTEMCONNECTION();
+?>

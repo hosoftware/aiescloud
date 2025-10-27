@@ -1,0 +1,69 @@
+<?php
+include_once "control/filehandle.class.php";
+?><!doctype html>
+<html lang="en">
+  <head>
+     <title>Aries Cloud</title><?php
+	include_once "model/headerlinks.php";
+  ?><style type="text/css">
+
+a.media   { display: inline; }
+div.media {margin: auto;z-index:1 !important;z-index:1}
+div.media div { font-style: italic; color: #888;z-index:1 }
+
+</style>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/chili-1.7.pack.js"></script>
+<script type="text/javascript" src="js/jquery.media.js"></script>
+<script type="text/javascript" src="jquery.metadata.js"></script>
+<script type="text/javascript">
+    $(function() {
+        $('a.media').media({width:750, height:750});
+    });
+</script>
+  </head>
+  <body onload="init()">
+		<div class="main"><!-- topbar start --><?php
+			include_once "model/topbar.php";
+			?><!-- topbar end -->
+			<!-- navigation bar start--><?php
+			include_once "model/navigation.php";
+			?><!-- navigation bar end-->
+				<!-- left bar start --><?php
+			include_once "model/leftbar.php";
+			?>
+				<!-- left bar end -->
+				<!-- Content start -->
+				<div class="content" name='main'>
+				<div class="pdf_menu">
+					<ul>
+						<?php
+					if(FILENAME == 'filehandle.php') {
+						if(!empty($report->arrInfo['no_of_files'])) {
+							for($i=1;$i<=$report->arrInfo['no_of_files'];$i++) {
+								$file = "dms_files/dms_".$report->arrInfo['rep_id']."part".$i."_".$report->arrInfo['rep_file'];
+								
+								?><li><a href="<?php print(FILENAME)?>?rep_id=<?php print($report->arrInfo['rep_id'])?>&type=<?php print($i)?>&cat_id=<?php print($_REQUEST['cat_id'])?>" <?php if(!empty($_REQUEST['type']) && $_REQUEST['type']==$i){ print(" style='color:red;'");} ?>>PART <?php print($i)?></a></li><?php
+															}
+						}
+					}
+					?>
+					</ul>
+				</div>
+				<?
+					switch($report->doAction) {
+						case"":
+							?>
+							 <a class="media" href="<?php print($report->fileName)?>">PDF File</a>
+							<?php
+							break;
+						
+					}
+				?></div>
+				
+		<!-- footer start --><?php
+			include_once "model/footer.php";
+			?><!-- footer end -->		
+		</div>
+   </body>
+</html><?php ?>

@@ -1,0 +1,63 @@
+.navigation ul {
+
+    list-style-type: none;
+    margin: 7px 0 0 0  ;
+    padding: 0;
+	
+}
+
+.navigation div{
+background: -webkit-linear-gradient(#5394DE, #5394DE); /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(#5394DE, #5394DE); /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(#5394DE, #5394DE); /* For Firefox 3.6 to 15 */
+  background: linear-gradient(#5394DE, #5394DE); /* Standard syntax */
+	background:-webkit-gradient(linear, left top, left bottom, from(#64B0D2), to(#5394DE));
+	padding-top:1px;
+	padding-left:4px;
+	padding-right:4px;
+	padding-bottom:4px;
+	 border-radius: 2px;
+	height:22px;
+	 -moz-box-shadow:    0px 1px 1px 2px #355A8F;
+  -webkit-box-shadow: 0px 1px 1px 2px #355A8F;
+  box-shadow:         0px 1px 1px 2px #355A8F;
+}
+.navigation div:hover{
+  background: #355A8F; /* For Safari 5.1 to 6.0 */
+  
+}
+.nav_active div {
+  background: #355A8F;; /* For Safari 5.1 to 6.0 */
+  -moz-box-shadow:    0px 1px 1px 2px #355A8F;
+  -webkit-box-shadow: 0px 1px 1px 2px #355A8F;
+  box-shadow:         0px 1px 1px 2px #355A8F;
+}
+
+.navigation li {
+	 float: left;
+    display: inline;
+	margin-left:8px;
+}
+
+.navigation a {
+	padding:5px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+    display: block;
+	text-decoration: none;
+	text-align: center;
+	color:#FFFFFF;
+	font-weight: bold;
+    
+}
+
+.navigation {
+
+padding-top:3px;
+}
+.user {
+ display:block;
+margin-top:1%;
+margin-left:68%;
+z-index:99px;
+}

@@ -1,0 +1,697 @@
+<?php
+include_once "control/report.class.php";
+?><!doctype html>
+<html lang="en">
+  <head>
+     <title>Aries Cloud</title><?php
+	include_once "model/headerlinks.php";
+  ?><style>
+
+ .progress { position:relative; width:400px; border: 1px solid #ddd; padding: 1px; border-radius: 3px; }
+ .bar { background-color: #B4F5B4; width:0%; height:20px; border-radius: 3px; }
+ .percent { position:absolute; display:inline-block; top:3px; left:48%; }
+ </style>
+ <script language="javascript">
+		function frmSubmit(objFrm) {
+			if(objFrm.txtClientName.value=="") {
+				document.getElementById('client').style.display="block";
+				objFrm.txtClientName.focus();
+				return false;
+			}
+			else {
+				document.getElementById('client').style.display="none";
+			}
+
+			if(objFrm.txtRig.value=="") {
+				document.getElementById('rig').style.display="block";
+				objFrm.txtRig.focus();
+				return false;
+			}
+			else {
+				document.getElementById('rig').style.display="none";
+			}
+
+			if(objFrm.txtCat.value=="") {
+				document.getElementById('cat').style.display="block";
+				objFrm.txtCat.focus();
+				return false;
+			}
+			else {
+				document.getElementById('cat').style.display="none";
+			}
+
+			if(objFrm.txtTagno.value=="") {
+				document.getElementById('tagno').style.display="block";
+				objFrm.txtTagno.focus();
+				return false;
+			}
+			else {
+				document.getElementById('tagno').style.display="none";
+			}
+
+
+
+			/*if(objFrm.txtInspectionDate.value=="") {
+				document.getElementById('InspectionDate').style.display="block";
+				objFrm.txtInspectionDate.focus();
+				return false;
+			}
+			else if(objFrm.txtInspectionDate.value!="") {
+				document.getElementById('InspectionDate').style.display="none";
+
+				var pattern =/^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$/;
+
+				if(!pattern.test(objFrm.txtInspectionDate.value)) {
+					document.getElementById('InvlInspectionDate').style.display="block";
+					return false;
+				}
+			}
+			else {
+				document.getElementById('InspectionDate').style.display="none";
+				document.getElementById('InvlInspectionDate').style.display="none";
+			}
+
+			if(objFrm.txtNextInspectionDate.value=="") {
+				document.getElementById('NextInspectionDate').style.display="block";
+				objFrm.txtNextInspectionDate.focus();
+				return false;
+			}
+			else if(objFrm.txtNextInspectionDate.value!="") {
+				var pattern =/^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$/;
+				if(!pattern.test(objFrm.txtNextInspectionDate.value)) {
+					document.getElementById('InvlNextInspectionDate').style.display="block";
+					return false;
+				}
+				document.getElementById('NextInspectionDate').style.display="none";
+			}
+			else {
+				document.getElementById('NextInspectionDate').style.display="none";
+				document.getElementById('InvlNextInspectionDate').style.display="none";
+			}*/
+
+
+
+			if(objFrm.txtComments.value=="") {
+				document.getElementById('Comments').style.display="block";
+				objFrm.txtComments.focus();
+				return false;
+			}
+			else {
+				document.getElementById('Comments').style.display="none";
+			}
+			<?php if(!empty($_REQUEST['doAction'])&&$_REQUEST['doAction']=='ADD') {?>
+				if(objFrm.txtFile && objFrm.txtFile.value=="") {
+					document.getElementById('File').style.display="block";
+					objFrm.txtFile.focus();
+					return false;
+				}
+				else {
+					document.getElementById('File').style.display="none";
+				}<?php
+			}
+			?>
+			/*if(objFrm.txtFile && objFrm.txtFile.value!="") {
+				 var fileName = objFrm.txtFile.value;
+				 var ext = fileName.substring(fileName.lastIndexOf('.') + 1);
+				 if(ext =="pdf" || ext =="xls" || ext =="xlsx")
+				{
+					document.getElementById('FileErr1').style.display="none";
+				}
+				else {
+					objFrm.txtFile.focus();
+					document.getElementById('FileErr1').style.display="block";
+				return false;
+				}
+
+
+			}
+			if(objFrm.txtFile2 && objFrm.txtFile2.value!="") {
+				 var fileName = objFrm.txtFile2.value;
+				 var ext = fileName.substring(txtFile2.lastIndexOf('.') + 1);
+				 if(ext =="pdf")
+				{
+					document.getElementById('FileErr2').style.display="none";
+				}
+				else {
+					objFrm.txtFile2.focus();
+					document.getElementById('FileErr2').style.display="block";
+				return false;
+				}
+
+
+			}
+
+			if(objFrm.txtFile3 && objFrm.txtFile3.value!="") {
+				 var fileName = objFrm.txtFile3.value;
+				 var ext = fileName.substring(txtFile3.lastIndexOf('.') + 1);
+				 if(ext =="pdf")
+				{
+					document.getElementById('FileErr3').style.display="none";
+				}
+				else {
+					objFrm.txtFile3.focus();
+					document.getElementById('FileErr3').style.display="block";
+				return false;
+				}
+
+			}
+
+			if(objFrm.txtFile4 && objFrm.txtFile4.value!="") {
+				 var fileName = objFrm.txtFile4.value;
+				 var ext = fileName.substring(txtFile3.lastIndexOf('.') + 1);
+				 if(ext =="pdf")
+				{
+					document.getElementById('FileErr4').style.display="none";
+				}
+				else {
+					objFrm.txtFile4.focus();
+					document.getElementById('FileErr4').style.display="block";
+				return false;
+				}
+
+			}
+
+			if(objFrm.txtFile5 && objFrm.txtFile5.value!="") {
+				 var fileName = objFrm.txtFile5.value;
+				 var ext = fileName.substring(txtFile5.lastIndexOf('.') + 1);
+				 if(ext =="pdf")
+				{
+					document.getElementById('FileErr5').style.display="none";
+				}
+				else {
+					objFrm.txtFile5.focus();
+					document.getElementById('FileErr5').style.display="block";
+				return false;
+				}
+
+			}*/
+
+				//startUpload();
+			//return false;
+
+		}
+		/*Function for deleting records*/
+		function deleteRec(path,id,page) {
+			if(confirm('Are you sure to delete this record')) {
+				location.href= path+"?doAction=DELETE_REPORT&rep_id="+id+"&page="+page;
+			}
+		}
+
+		function loadXMLDoc(cat_id)
+		{
+
+			var xmlhttp;
+			if (window.XMLHttpRequest)
+			  {// code for IE7+, Firefox, Chrome, Opera, Safari
+			  xmlhttp=new XMLHttpRequest();
+			  }
+			else
+			  {// code for IE6, IE5
+			  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+			  }
+			xmlhttp.onreadystatechange=function()
+			  {
+			  if (xmlhttp.readyState==4 && xmlhttp.status==200)
+				{
+
+				  document.getElementById("sub_category").innerHTML= "";
+					document.getElementById("sub_category").innerHTML=xmlhttp.responseText;
+				}
+			  }
+
+			xmlhttp.open("GET","ajax.php?doAction=SELECTSUBCAT&cat_id="+cat_id,true);
+			var params = "doAction=SELECTSUBCAT&cat_id="+cat_id;
+			xmlhttp.send();
+			http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			http.setRequestHeader("Content-length", params.length);
+			http.setRequestHeader("Connection", "close");
+
+		}
+
+		function displayRig(client_id) {
+			var xmlhttp;
+			if (window.XMLHttpRequest)
+			  {// code for IE7+, Firefox, Chrome, Opera, Safari
+			  xmlhttp=new XMLHttpRequest();
+			  }
+			else
+			  {// code for IE6, IE5
+			  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+			  }
+			xmlhttp.onreadystatechange=function()
+			  {
+			  if (xmlhttp.readyState==4 && xmlhttp.status==200)
+				{
+
+				  document.getElementById("txtRig").innerHTML= "";
+					document.getElementById("rig_list").innerHTML=xmlhttp.responseText;
+				}
+			  }
+
+			xmlhttp.open("GET","ajax.php?doAction=SELECTRIG&client_id="+client_id,true);
+			var params = "doAction=SELECTRIG&client_id="+client_id;
+			xmlhttp.send();
+			http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			http.setRequestHeader("Content-length", params.length);
+			http.setRequestHeader("Connection", "close");
+		}
+		/*Function for date picker*/
+		function init() {
+			calendar.set("txtInspectionDate");
+			calendar.set("txtNextInspectionDate");
+			calendar.set("txtTestproof");
+			calendar.set("txtNextTestproof");
+			calendar.set("txtDateTpi");
+			calendar.set("txtNextDateTpi");
+		}
+		/*Function for adding category*/
+		function AddCategory() {
+			if(document.getElementById('txtCat').value=="") {
+
+				document.getElementById('cat').style.display="block";
+				document.getElementById('txtCat').focus();
+				document.getElementById('info_box').style.display="none";
+			}
+			else {
+				document.getElementById('cat').style.display="none";
+				document.getElementById('info_box').style.display="";
+				document.getElementById('cat_id').value = document.getElementById('txtCat').value;
+			}
+		}
+		/*Function for selecting category*/
+		function cancelCategory(){
+			document.getElementById('info_box').style.display="none";
+		}
+		/*Function for sub mitting category*/
+		function  submitCategory() {
+			var sub_category = document.getElementById('sub_cat_id').value;
+			var category = document.getElementById('cat_id').value;
+			var xmlhttp;
+			if (window.XMLHttpRequest)
+			  {// code for IE7+, Firefox, Chrome, Opera, Safari
+			  xmlhttp=new XMLHttpRequest();
+			  }
+			else
+			  {// code for IE6, IE5
+			  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+			  }
+			xmlhttp.onreadystatechange=function()
+			  {
+			  if (xmlhttp.readyState==4 && xmlhttp.status==200)
+				{
+
+				  document.getElementById("sub_category").innerHTML= "";
+					document.getElementById("sub_category").innerHTML=xmlhttp.responseText;
+					document.getElementById('info_box').style.display="none";
+				}
+			  }
+
+			xmlhttp.open("GET","ajax.php?doAction=ADDSUBCATEGORY&cat_id="+category+'&sub_cat_id='+sub_category,true);
+			var params = "doAction=SELECTSUBCAT&cat_id="+cat_id;
+			xmlhttp.send();
+			http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			http.setRequestHeader("Content-length", params.length);
+			http.setRequestHeader("Connection", "close");
+		}
+
+  </script>
+   <script type="text/javascript" src="../js/script.js"></script>
+  </head>
+   <body onload="init()">
+		<div class="main"><!-- topbar start --><?php
+			include_once "model/topbar.php";
+			?><!-- topbar end -->
+			<!-- navigation bar start--><?php
+			include_once "model/navigation.php";
+			?><!-- navigation bar end-->
+				<!-- left bar start --><?php
+			include_once "model/leftbar.php";
+			?><div class="clear">
+				</div>
+				<!-- left bar end -->
+				<!-- Content start -->
+				<div class="content"><?php
+					switch($report->doAction) {
+						case"":
+							$reslt = $report->getReportInfo();
+							$r_rec = 	$report->objCommonFunc->executeQuery("SELECT FOUND_ROWS() no");
+							$row_rec = mysqli_fetch_assoc($r_rec);
+							$total_rec = $row_rec['no'];
+							$rsltcat = $report->getCategoryNameList();
+							$rsl4 = $report->getSubCategoryNameList($report->txtCat);
+							?><div class="subcontent">
+								<span class="heading1"><strong>REPORT MANAGEMENT</strong></span>
+								<div class="search">
+								<form method="post" action="<?php print(FILENAME)?>">
+								<table width='100%'>
+									<tr>
+										<td>
+
+
+												<span style='font-size:13px;'>Reference number</span>
+											</td>
+											<td>
+												<input type="text" name="txtFilterName" value="<?php print($report->txtFilterName)?>" class="txtfield" size="25"/>
+											</td>
+											<td>
+												<select name="txtCat" id="txtCat"  class="txtfield" onchange="javascript:loadXMLDoc(this.value)"><option value="">-- Select Category-- </option><?php
+													while($row = $report->objCommonFunc->fetchAssoc($rsltcat)) {
+														?><option value="<?php print($row['cat_id'])?>" <?php if($report->txtCat == $row['cat_id']) {  print("selected");}?>><?php print($row['cat_name'])?></option><?php
+													}
+												?></select>
+												</td>
+												<td>
+												<div id='sub_category' style="width:190px;"><select name="txtSubCat" id="txtSubCat"  class="txtfield" ><option value=""> -- Select Subcategory-- </option><?php
+													while($row = $report->objCommonFunc->fetchAssoc($rsl4)) {
+														?><option value="<?php print($row['subcat_id'])?>" <?php if($report->txtSubCat == $row['subcat_id']) {  print("selected");}?>><?php print($row['subcat_name'])?></option><?php
+													}
+												?></select></div>
+										</td>
+
+
+										<td colspan="3" align="right">
+												<input type="submit" value="SEARCH" class="button1"/>
+												<a href="<?php print(FILENAME)?>?doAction=CLEAR" class="button1">CLEAR</a>
+										</td>
+										<td colspan="2" align="right">
+												<a href="<?php print(FILENAME)?>?doAction=ADD" class="button1">ADD</a>
+										</td>
+									</tr>
+									</table>
+									</form>
+								</div>
+
+								<table class="mainTable" cellpadding="0" cellspacing="0">
+									<th width="20%" >Reference number</th><th width="25%">Category</th><th width="25%">Sub Category</th><th width="10%">Inspection Date</th><th width="2%">Next Inspection</th><th width="2%">Uploaded Date</th><th width="2%">Comments</th><th colspan="4">Actions</th><?php
+
+								while($row = $report->objCommonFunc->fetchAssoc($reslt)) {
+									$strView="";
+									$no_of_files = $row['no_of_files'];
+
+									if(!empty($row['rep_file2'])) {
+										$strView .='<a href="filehandle.php?rep_id='.$row['rep_id'].'&type=1" " title="View Part1"><img src="images/view.png" height="16" width="25" title="View" target="_blank"></a><br/>';
+									}
+									else if(!empty($row['rep_file3'])) {
+										$strView .='<a href="filehandle.php?rep_id='.$row['rep_id'].'&type=2"  title="View Part1"><img src="images/download.png" height="16" width="25" title="View" target="_blank"></a><br/>';
+									}
+									else if(!empty($row['rep_file4'])) {
+										$strView .='<a href="filehandle.php?rep_id='.$row['rep_id'].'&type=3"  title="View Part1"><img src="images/download.png" height="16" width="25" title="View" target="_blank"></a><br/>';
+									}
+									else if(!empty($row['rep_file5'])) {
+										$strView .='<a href="filehandle.php?rep_id='.$row['rep_id'].'&type=4"  title="View Part1"><img src="images/download.png" height="16" width="25" title="View" target="_blank"></a><br/>';
+									}
+									?><tr><td><?php print($row['rep_desc'])?></td>
+									<td><?php print($row['cat_name'])?></td>
+									<td><?php print($row['subcat_name'])?></td>
+									<td><?php print($report->objCommonFunc->sql2date($row['rep_insp_date']))?></td>
+									<td><?php print($report->objCommonFunc->sql2date($row['rep_next_insp_date']))?></td>
+									<td><?php print($report->objCommonFunc->sql2date($row['rep_created_date']))?></td>
+									<td><?php print($row['rep_comments'])?></td>
+									<td align="center"><a href="<?php print(FILENAME)?>?rep_id=<?php print($row['rep_id'])?>&doAction=EDIT"><img src="images/edit.jpeg" height="16" width="25" title="Edit"></i></a></td><?php
+									if($_SESSION['type'] == 'S') {
+									?><td align="center"><a href="javascript:deleteRec('<?php print(FILENAME)?>','<?php print($row['rep_id'])?>','<?php print($report->page)?>')"><img src="images/delete.png" height="16" width="20" title="Delete" target="_blank"></i></a></td><?php
+									}
+
+									?><td align="center"><a href="filehandle.php?rep_id=<?php print($row['rep_id'])?>&doAction=DOWNLOAD"><img src="images/download.png" height="16" width="25" title="Download" target="_blank"></i></a></td><?php
+									if(!empty($strView)) {
+									?><td align="center"><?php print($strView)?></td></tr><?php
+									}
+									else {
+										?><td></td><?php
+									}
+								}
+								?></table><?php
+									$report->objPagination->showPagination($total_rec,FILENAME,$report->params);
+							?></div><?php
+							break;
+						case"ADD":
+						case"EDIT":
+							if(isset($_REQUEST['rep_id'])){
+								$arrInfo = $report->objCommonFunc->getSingleRecInfo("*","reports","rep_id=". $report->rep_id);
+								$_REQUEST['txtClientName'] = $arrInfo['rep_client_id'];
+								$_REQUEST['txtRig'] = $arrInfo['rep_rig_id'];
+								$_REQUEST['txtCat'] = $arrInfo['rep_cat_id'];
+								$_REQUEST['txtSubcat'] = $arrInfo['rep_sub_cat_id'];
+								$_REQUEST['txtTagno']  = $arrInfo['rep_desc'];
+								$_REQUEST['txtInspectionDate'] = $report->objCommonFunc->sql2date($arrInfo['rep_insp_date']);
+								$_REQUEST['txtNextInspectionDate'] = $report->objCommonFunc->sql2date($arrInfo['rep_next_insp_date']);
+								$_REQUEST['txtComments'] = $arrInfo['rep_comments'];
+								/*$_REQUEST['txtPassword'] = $arrInfo['rig_client_id'];
+								$_REQUEST['txtRPassword'] = $arrInfo['rig_client_id'];
+								$_REQUEST['txtRemarks'] = $arrInfo['rig_remarks'];
+								$_REQUEST['txtUserName'] = $arrInfo['rl_username'];*/
+								$heading = "REPORT MANAGEMENT- Edit Rig ";
+							}
+							else {
+								$heading = "REPORT MANAGEMENT- Add Rig";
+							}
+							if(empty($_REQUEST['txtRig'])) {
+								$_REQUEST['txtRig'] = "";
+							}
+							if(empty($_REQUEST['txtClientName'])) {
+								$_REQUEST['txtClientName'] = "";
+							}
+							if(empty($_REQUEST['txtCat'])) {
+								$_REQUEST['txtCat'] = "";
+							}
+							if(empty($_REQUEST['txtSubcat'])) {
+								$_REQUEST['txtSubcat'] = "";
+							}
+							if(empty($_REQUEST['txtTagno'])) {
+								$_REQUEST['txtTagno'] = "";
+							}
+							if(empty($_REQUEST['txtInspectionDate'])) {
+								$_REQUEST['txtInspectionDate'] = "";
+							}
+							if(empty($_REQUEST['txtNextInspectionDate'])) {
+								$_REQUEST['txtNextInspectionDate'] = "";
+							}
+
+							if(empty($_REQUEST['txtComments'])) {
+								$_REQUEST['txtComments'] = "";
+							}
+							$rsl1 = $report->getClientNameList();
+							$rsl2 = $report->getRigNameList();
+							$rsl3 = $report->getCategoryNameList();
+							$rsl4 = $report->getSubCategoryNameList($_REQUEST['txtCat']);
+							?><div class="subcontent">
+								<div class="search">
+								<span class="heading1"><strong><?php print($heading)?></strong></span>
+								</div>
+								 <div id="errMsg">
+								  </div>
+								 <?php
+								if(!empty($_REQUEST['errMsg'])) {
+								?><div id="errMsg">
+										Sorry! this file can't split by the system. Please split this file manually and upload to view the file.
+								  </div><?php
+								}
+								?>
+								<div class="frm-content">
+									<form method="post" action="<?php print(FILENAME)?>" onsubmit="return frmSubmit(this)" enctype="multipart/form-data"  id='myForm'>
+										<table border="0" align="center" >
+											<tr>
+												<td>Client Name<strong class="astric">*</strong></td><td><select name="txtClientName" id="txtClientName"  class="txtfield" onchange="javascript:displayRig(this.value)"><option value="">-- Select Client --</option><?php
+													while($row = $report->objCommonFunc->fetchAssoc($rsl1)) {
+														?><option value="<?php print($row['client_id'])?>" <?php if($_REQUEST['txtClientName'] == $row['client_id']) {  print("selected");}?>><?php print($row['client_name'])?></option><?php
+													}
+												?></select>
+
+												<div class="arrow_box" id='client' style="display:none;">Please select Cleint Name</div>
+												</td>
+											</tr>
+											<tr>
+												<td>Select Rig/Vessel/Project<strong class="astric">*</strong></td><td>
+												<div id='rig_list' style="width:207px;border:1px;"><select name="txtRig" id="txtRig"  class="txtfield" ><option value=""> -- Select Rig -- </option><?php
+													while($row = $report->objCommonFunc->fetchAssoc($rsl2)) {
+														?><option value="<?php print($row['rig_id'])?>" <?php if($_REQUEST['txtRig'] == $row['rig_id']) {  print("selected");}?>><?php print($row['rig_name']."-(".$row['rl_username'].")")?></option><?php
+													}
+												?></select>
+												</div>
+												<div class="arrow_box" id='rig' style="display:none;">Please select Rig</div>
+												</td>
+											</tr>
+											<tr>
+												<td>Select Category<strong class="astric">*</strong></td><td>
+													<select name="txtCat" id="txtCat"  class="txtfield" onchange="javascript:loadXMLDoc(this.value)"><option value="">-- Select Category-- </option><?php
+													while($row = $report->objCommonFunc->fetchAssoc($rsl3)) {
+														?><option value="<?php print($row['cat_id'])?>" <?php if($_REQUEST['txtCat'] == $row['cat_id']) {  print("selected");}?>><?php print($row['cat_name'])?></option><?php
+													}
+												?></select>
+												<div class="arrow_box" id='cat' style="display:none;">Please select Category</div>
+												</td>
+											</tr>
+											<tr>
+												<td>Select Subcategory<strong class="astric"></strong></td><td>
+												 <div id='sub_category' style="width:207px;border:1px;"><select name="txtSubCat" id="txtSubCat"  class="txtfield" ><option value=""> -- Select Subcategory-- </option><?php
+													while($row = $report->objCommonFunc->fetchAssoc($rsl4)) {
+														?><option value="<?php print($row['subcat_id'])?>" <?php if($_REQUEST['txtSubcat'] == $row['subcat_id']) {  print("selected");}?>><?php print($row['subcat_name'])?></option><?php
+													}
+												?></select></div><div style='position:absolute;margin-left:210px;margin-top:-23px;'><a class="button1" href="javascript:AddCategory()">ADD</a></div>
+												<div class="arrow_box" id='subcat' style="display:none;">Please select Subcategory</div>
+												</td>
+											</tr>
+											<tr>
+												<td>Reference number<strong class="astric">*</strong></td><td><textarea class="txtfield" name="txtTagno" id="txtTagno" cols="31"><?php print($_REQUEST['txtTagno'])?></textarea>
+												<div class="arrow_box" id='tagno' style="display:none;">Please enter Reference number</div>
+												</td>
+											</tr>
+											<tr>
+												<td>Inspection Date<strong class="astric"></strong></td><td><input type="text" name="txtInspectionDate" value="<?php print(htmlentities($_REQUEST['txtInspectionDate'],ENT_QUOTES))?>" class="txtfield" size="10" id="txtInspectionDate"/><strong style="color:red;">(dd/mm/yyyy)</strong>
+												<div class="arrow_box" id='InspectionDate' style="display:none;">Please select Inspection Date</div>
+												<div class="arrow_box" id='InvlInspectionDate' style="display:none;">Invalid Inspection Date</div>
+												</td>
+											</tr>
+											<tr>
+												<td>Next Inspection Date<strong class="astric"></strong></td><td><input type="text" name="txtNextInspectionDate" value="<?php print(htmlentities($_REQUEST['txtNextInspectionDate'],ENT_QUOTES))?>" class="txtfield" size="10" id="txtNextInspectionDate"/><strong style="color:red;">(dd/mm/yyyy)</strong>
+												<div class="arrow_box" id='NextInspectionDate' style="display:none;">Please select Next Inspection Date</div>
+												<div class="arrow_box" id='InvlNextInspectionDate' style="display:none;">Invalid Next Inspection Date</div>
+												</td>
+											</tr>
+
+											<tr>
+												<td>Comments<strong class="astric">*</strong></td><td><textarea name="txtComments" class="txtfield" size="35" id="txtComments" cols="31"><?php print(htmlentities($_REQUEST['txtComments'],ENT_QUOTES))?></textarea>
+												<div class="arrow_box" id='Comments' style="display:none;">Please enter Comments</div>
+												</td>
+											</tr><?php
+											?><tr>
+												<td>File<strong class="astric">*</strong></td><td><input type="file" name="txtFile" value="*" class="txtfield" size="30" id="txtFile"/><?php
+												if(!empty($arrInfo['rep_file'])) {
+													print(str_replace('dms_'.$arrInfo['rep_id'].'_','',$arrInfo['rep_file']));
+												}
+												?><div class="arrow_box" id='File' style="display:none;">Please upload File</div>
+												<div class="arrow_box" id='FileErr1' style="display:none;">Please select '.pdf OR .xls OR .xlsx' extention files only.</div>
+												</td>
+											</tr><?php
+											if(!empty($_REQUEST['rep_id'])) {
+											?><tr>
+												<td colspan='2'><span style='color:red; text-align:center;'><strong>Upload only PDF files and  Maximum file size should be 110 MB</strong></span></td>
+											</tr>
+											<tr>
+												<td>File1 to view</td><td><input type="file" name="txtFile2" value="*" class="txtfield" size="30" id="txtFile2"/><?php
+												if(!empty($arrInfo['rep_file2'])) {
+													print(str_replace('dms_'.$arrInfo['rep_id'].'_','',$arrInfo['rep_file2']));
+												}
+												?>
+												<div class="arrow_box" id='File2' style="display:none;">Please upload File</div>
+												<div class="arrow_box" id='FileErr2' style="display:none;">Please select '.pdf' extention files only.</div>
+												</td>
+											</tr>
+											<tr>
+												<td>File2 to view</td><td><input type="file" name="txtFile3" value="*" class="txtfield" size="30" id="txtFile3"/><?php
+												if(!empty($arrInfo['rep_file3'])) {
+													print(str_replace('dms_'.$arrInfo['rep_id'].'_','',$arrInfo['rep_file3']));
+												}
+												?>
+												<div class="arrow_box" id='File3' style="display:none;">Please upload File</div>
+												<div class="arrow_box" id='FileErr3' style="display:none;">Please select '.pdf' extention files only.</div>
+												'
+												</td>
+											</tr>
+											<tr>
+												<td>File3 to view</td><td><input type="file" name="txtFile4" value="*" class="txtfield" size="30" id="txtFile4"/><?php
+												if(!empty($arrInfo['rep_file4'])) {
+													print(str_replace('dms_'.$arrInfo['rep_id'].'_','',$arrInfo['rep_file4']));
+												}
+												?>
+												<div class="arrow_box" id='File4' style="display:none;">Please upload File</div>
+												<div class="arrow_box" id='FileErr4' style="display:none;">Please select '.pdf' extention files only.</div>
+
+												</td>
+											</tr>
+											<tr>
+												<td>File4 to view</td><td><input type="file" name="txtFile5" value="*" class="txtfield" size="30" id="txtFile5"/><?php
+												if(!empty($arrInfo['rep_file5'])) {
+													print(str_replace('dms_'.$arrInfo['rep_id'].'_','',$arrInfo['rep_file5']));
+												}
+												?>
+												<div class="arrow_box" id='File5' style="display:none;">Please upload File</div>
+												<div class="arrow_box" id='FileErr5' style="display:none;">Please select '.pdf' extention files only.</div>
+
+												</td>
+											</tr><?php
+													}
+											?><tr>
+												<td colspan="2">
+												 <div id="status"></div>
+												   <div class="progress">
+													 <div class="bar"></div >
+													 <div class="percent">0%</div >
+												   </div>
+												</td>
+											</tr>
+											<?php
+
+											?><tr>
+												<td align="center" colspan="2"><input type="submit" value="SUBMIT" class="button1"/>&nbsp;&nbsp;<a href="<?php print(FILENAME)?>" class="button1">CANCEL</a></td>
+											</tr>
+
+										</table>
+										<input type='hidden' name='page' value="<?php print($report->page)?>"/>
+										<input type='hidden' name='rep_id' value="<?php print($report->rep_id)?>"/>
+										<input type='hidden' name='prev_doAction' value="<?php print($report->doAction)?>"/>
+										<?php
+										if(!empty($_REQUEST['rep_id'])) {
+											?><input type='hidden' name='doAction' value="UPDATE_REPORT"/><?php
+										}
+										else {
+											?><input type='hidden' name='doAction' value="ADD_REPORT"/><?php
+										}
+									?></form>
+								</div>
+							</div><?php
+							break;
+					}
+				?></div>
+				<!-- Content end -->
+				<div class='infoBox' style='display:none;' id='info_box'>
+					<form >
+					   <div class='info-content'>
+						<label>Sub Category</label><input type='text' name='sub_cat_id' id='sub_cat_id' value='' class="txtfield" size="35"/><br/>
+						<input class="button1" type='button' value='SUBMIT' onclick="javascript:submitCategory()"/><a class="button1" href="javascript:cancelCategory()">CANCEL</a>
+						<input type="hidden" name='cat_id' id='cat_id' value=''/>
+					  </div>
+					</form>
+				</div>
+				<!-- footer start --><?php
+			include_once "model/footer.php";
+			?><!-- footer end -->
+		</div>
+   </body>
+</html>
+ <script src="js/jquery.js"></script>
+ <script src="js/jquery.form.js"></script>
+ <script>
+ (function() {
+ var bar = $('.bar');
+ var percent = $('.percent');
+ var status = $('#status');
+ var errMsg = $('#errMsg');
+ $('#myForm').ajaxForm({
+   beforeSend: function() {
+     status.empty();
+     var percentVal = '0%';
+     bar.width(percentVal)
+     percent.html(percentVal);
+   },
+   uploadProgress: function(event, position, total, percentComplete) {
+     var percentVal = percentComplete + '%';
+     bar.width(percentVal)
+     percent.html(percentVal);
+   },
+   complete: function(xhr) {
+     bar.width("100%");
+     percent.html("100%");
+	 if(xhr.responseText == 'SUCCESS') {
+		 location.href="<?php print(FILENAME)?>";
+	 }
+	 else if(parseInt(xhr.responseText)>0) {
+		 location.href="<?php print(FILENAME)?>?doAction=EDIT&rep_id="+parseInt(xhr.responseText)+"&errMsg=SN"
+	 }
+	 else {
+		 errMsg.html(xhr.responseText);
+	 }
+   }
+ });
+ })();
+ </script>

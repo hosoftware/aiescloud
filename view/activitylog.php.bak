@@ -1,0 +1,87 @@
+<?php
+include_once "control/activitylog.class.php";
+?><!doctype html>
+<html lang="en">
+  <head>
+     <title>Aries Cloud</title><?php
+	include_once "model/headerlinks.php";
+  ?><style>  
+ .progress { position:relative; width:400px; border: 1px solid #ddd; padding: 1px; border-radius: 3px; }  
+ .bar { background-color: #B4F5B4; width:0%; height:20px; border-radius: 3px; }  
+ .percent { position:absolute; display:inline-block; top:3px; left:48%; }  
+ </style>  
+ <script language="javascript">
+		/*Function for date picker*/
+		function init() {
+			calendar.set("txtInspectionDate");
+			calendar.set("txtNextInspectionDate");
+			
+		}
+  </script>
+  </head>
+   <body onload="init()">
+		<div class="main"><!-- topbar start --><?php
+			include_once "model/topbar.php";
+			?><!-- topbar end -->
+			<!-- navigation bar start--><?php
+			include_once "model/navigation.php";
+			?><!-- navigation bar end-->
+				<!-- left bar start --><?php
+			include_once "model/leftbar.php";
+			?><div class="clear">
+				</div>
+				<!-- left bar end -->
+				<!-- Content start -->
+				<div class="content"><?
+					switch($activitylog->doAction) {
+						case"":
+							$reslt = $activitylog->getRequestList();
+							$r_rec = 	$activitylog->objCommonFunc->executeQuery("SELECT FOUND_ROWS() no");
+							$row_rec = mysqli_fetch_assoc($r_rec);
+							$total_rec = $row_rec['no'];
+							?><div class="subcontent">
+								<span class="heading1"><strong style="color:red;">USER ACTIVITY LIST</strong></span>
+								<div class="search">
+										<form method="post" action="<?php print(FILENAME)?>">
+										<table border="0" width="100%">
+										<tr><td>Search value</td>
+										<td><input type="text" name="txtFilterName" value="<?php print($activitylog->txtFilterName)?>" class="txtfield" size="20"/></td>
+										<td>From Date</td>
+										<td><input type='text' name='txtInspectionDate' id='txtInspectionDate' size="10" value="<?php print($activitylog->txtInspectionDate)?>" class="txtfield"/></td>
+										<td>To  Date</td>
+										<td><input type='text' name='txtNextInspectionDate' id='txtNextInspectionDate' size="10" value="<?php print($activitylog->txtNextInspectionDate)?>" class="txtfield"/></td>
+										
+										<td colspan="3" align='right'><input type="submit" value="SEARCH" class="button1"/></td>
+										<td colspan="3" align='left'><a href="<?php print(FILENAME)?>?doAction=CLEAR" class="button1">CLEAR</a></td></tr>
+										</table>
+										</form>
+									
+								</div>
+								
+								<table class="mainTable" cellpadding="0" cellspacing="0">
+									<th width="20%" >Username</th><th width="25%">Type</th><th width="10%"> Date</th><?php
+								while($row = $activitylog->objCommonFunc->fetchAssoc($reslt)) {
+									$strView="";
+									
+									?><tr><td><?php print($row['username'])?></td>
+									<td><?php print($row['log_type'])?></td>
+									<td><?php print($row['log_date'])?></td>
+									<?php
+								}
+								?></table><?php
+									$activitylog->objPagination->showPagination($total_rec,FILENAME,urlencode($activitylog->params));
+							?></div><?php
+							break;
+						
+					}
+				?></div>
+				<!-- Content end -->
+				
+				<!-- footer start --><?php
+			include_once "model/footer.php";
+			?><!-- footer end -->
+		</div>
+			<?php
+		
+   ?></body>
+</html>
