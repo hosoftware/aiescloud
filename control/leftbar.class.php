@@ -2,8 +2,8 @@
 include_once"control/common.php";
 class LEFTBAR {
 	function __construct() {
-		$this->page = 0;
-		$this->rig_id=0;
+		public $this->page = 0;
+		public $this->rig_id=0;
 		/*do action changes*/
 		$this->objCommonFunc = new COMMONFUNC();
 		$this->objPagination = new PAGINATION();
@@ -28,7 +28,7 @@ class LEFTBAR {
 					$_SESSION = [];
 					//remove PHPSESSID from browser
                     if ( isset( $_COOKIE[session_name()] ) )
-                    setcookie( session_name(), “”, time()-3600, “/” );
+                    setcookie( session_name(), "", time()-3600, "/");
                     //clear session from globals
                     $_SESSION = array();
                     //clear session from disk
