@@ -1,5 +1,5 @@
 <?php
-define('DEBUG','1');
+define('DEBUG','0');
 define('CLIENTNAME','MARKETINGLOGAPPLICATIONMASTER');
 define('LIMIT','18');
 define('GALLIMIT','32');

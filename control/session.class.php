@@ -10,5 +10,5 @@ session_cache_limiter('nocache');
 ini_set('session.cookie_lifetime',84600);
 ini_set('session.gc_maxlifetime',84600);
 session_start();
-ini_set('display_errors', '1'); 
+ini_set('display_errors', '0'); 
 ?>
