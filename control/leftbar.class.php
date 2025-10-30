@@ -1,8 +1,8 @@
 <?php
 include_once"control/common.php";
 class LEFTBAR {
-	public $this->page;
-	public $this->rig_id;
+	public $page;
+	public $rig_id;
 	function __construct() {
 		 $this->page = 0;
 		 $this->rig_id=0;
