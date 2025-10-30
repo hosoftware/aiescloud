@@ -70,7 +70,7 @@ class ADMINUSER {
 						$sqlIns = "INSERT INTO rig_login (rl_rig_id,rl_username,rl_password,tmp_pass,rl_type)
 						VALUES('".$id."',
 						'".addslashes($_REQUEST['txtUserName'])."',
-						AES_ENCRYPT('".addslashes($_REQUEST['txtPassword'])."','".$key."'),AES_ENCRYPT('".addslashes($_REQUEST['txtPassword'])."','".$key."'),'A')";
+						'".md5(addslashes($_REQUEST['txtPassword']))."','".md5(addslashes($_REQUEST['txtPassword']))."','A')";
 						$this->objCommonFunc->executeQuery($sqlIns);
 					}
 					header('location:'.FILENAME."?page=".$this->page);
@@ -93,8 +93,8 @@ class ADMINUSER {
 				case "UPDATE_PASSWORD":
 					$key = md5(CLIENTNAME);
 					$sqlUpd = "UPDATE rigs,rig_login
-							   SET rl_password = AES_ENCRYPT('".addslashes($_REQUEST['txtPassword'])."','".$key."'),
-							   tmp_pass = AES_ENCRYPT('".addslashes($_REQUEST['txtPassword'])."','".$key."')
+							   SET rl_password = '".md5(addslashes($_REQUEST['txtPassword']))."',
+							   tmp_pass = '".md5(addslashes($_REQUEST['txtPassword']))."'
 							   WHERE rl_rig_id = '".addslashes($this->rig_id)."'";
 					$this->objCommonFunc->executeQuery($sqlUpd);
 					header('location:'.FILENAME."?page=".$this->page."&rig_id=".$this->rig_id);
