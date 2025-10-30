@@ -1,9 +1,11 @@
 <?php
 include_once"control/common.php";
 class LEFTBAR {
+	public $this->page;
+	public $this->rig_id;
 	function __construct() {
-		public $this->page = 0;
-		public $this->rig_id=0;
+		 $this->page = 0;
+		 $this->rig_id=0;
 		/*do action changes*/
 		$this->objCommonFunc = new COMMONFUNC();
 		$this->objPagination = new PAGINATION();
