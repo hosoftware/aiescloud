@@ -1,5 +1,5 @@
 <?php
-ini_set('display_errors',1);
+ini_set('display_errors',0);
 include_once"control/session.class.php";
 include_once"control/system.class.php";
 include_once"control/constants.php";
