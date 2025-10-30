@@ -77,7 +77,7 @@ class RIG {
 						$sqlIns = "INSERT INTO rig_login (rl_rig_id,rl_username,rl_password,tmp_pass)
 						VALUES('".$id."',
 						'".addslashes($_REQUEST['txtUserName'])."',
-						MD5('".addslashes($_REQUEST['txtPassword'])."','".$key."'),MD5('".addslashes($_REQUEST['txtPassword'])."','".$key."'))";
+						'".md5(addslashes($_REQUEST['txtPassword']))."','".md5(addslashes($_REQUEST['txtPassword']))."'";
 						$this->objCommonFunc->executeQuery($sqlIns);
 					}
 					$sql_ins="INSERT INTO activity_log(username,user_id,log_type)VALUES('".$_SESSION['username']."',
@@ -107,7 +107,7 @@ class RIG {
 				case "UPDATE_PASSWORD":
 					$key = md5(CLIENTNAME);
 					  $sqlUpd = "UPDATE rigs,rig_login 
-							   SET tmp_pass = MD5('".addslashes($_REQUEST['txtPassword'])."','".$key."'),
+							   SET tmp_pass = '".md5(addslashes($_REQUEST['txtPassword']))."',
 							   rl_username = '".addslashes($_REQUEST['txtUserName'])."'
 							   WHERE rl_rig_id = '".addslashes($this->rig_id)."'";
 							 // exit;
